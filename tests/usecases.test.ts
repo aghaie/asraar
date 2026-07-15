@@ -100,6 +100,42 @@ describe('sendMessage', () => {
   });
 });
 
+describe('sendMessage — streaming', () => {
+  it('با موتور جریانی، دلتاها می‌رسند و متن کامل ذخیره می‌شود', async () => {
+    const deps = testDeps();
+    deps.engine.replyStream = async (
+      _history: unknown,
+      onDelta: (t: string) => void,
+    ) => {
+      onDelta('سلام ');
+      onDelta('جوینده');
+      return 'سلام جوینده';
+    };
+    const { id, ownerToken } = startConversation(deps, 'client-1');
+    const deltas: string[] = [];
+    const result = await sendMessage(
+      deps,
+      { conversationId: id, ownerToken, content: 'سلام', clientKey: 'client-1' },
+      (t) => deltas.push(t),
+    );
+    expect(deltas).toEqual(['سلام ', 'جوینده']);
+    expect(result.reply).toBe('سلام جوینده');
+    expect(deps.repo.findById(id)!.messages[1].content).toBe('سلام جوینده');
+  });
+
+  it('موتور بدون استریم: fallback یک دلتا با متن کامل می‌دهد', async () => {
+    const deps = testDeps();
+    const { id, ownerToken } = startConversation(deps, 'client-1');
+    const deltas: string[] = [];
+    await sendMessage(
+      deps,
+      { conversationId: id, ownerToken, content: 'سلام', clientKey: 'client-1' },
+      (t) => deltas.push(t),
+    );
+    expect(deltas).toEqual(['پاسخ آزمایشی مناد']);
+  });
+});
+
 describe('finishConversation', () => {
   it('هنگام انتشار، متن را نگارش می‌کند و نسخه‌ی اصلی را نگه می‌دارد', async () => {
     const deps = testDeps();

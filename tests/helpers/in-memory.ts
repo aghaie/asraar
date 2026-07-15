@@ -93,6 +93,10 @@ export class StubRateLimiter implements RateLimiter {
 export class StubEngine implements LlmEngine {
   readonly name = 'stub';
   calls: EngineTurn[][] = [];
+  replyStream?: (
+    history: EngineTurn[],
+    onDelta: (text: string) => void,
+  ) => Promise<string>;
 
   constructor(private readonly cannedReply = 'پاسخ آزمایشی مناد') {}
 

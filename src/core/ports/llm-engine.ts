@@ -14,4 +14,10 @@ export interface LlmEngine {
   readonly name: string;
   /** تاریخچه‌ی گفتگو را می‌گیرد و پاسخ بعدی مناد را برمی‌گرداند. */
   reply(history: EngineTurn[]): Promise<string>;
+  /**
+   * نسخه‌ی جریانی (اختیاری): تکه‌های پاسخ را به‌محض تولید به onDelta می‌دهد
+   * و در پایان، متن کامل را برمی‌گرداند. موتورهای بدون استریم، این را ندارند
+   * و Use Case خودش به reply() برمی‌گردد.
+   */
+  replyStream?(history: EngineTurn[], onDelta: (text: string) => void): Promise<string>;
 }

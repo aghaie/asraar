@@ -9,7 +9,31 @@ export const metadata: Metadata = {
   },
   description:
     'مناد یک شبکه‌ی اجتماعی نیست؛ موتور گفتگوی انسان با حقیقت است. تنها مرجع: قرآن.',
+  icons: { icon: '/icon.svg' },
 };
+
+/** نشان مناد: دایره و نقطه‌ی مرکزی — «مناد» یعنی واحد بسیط. */
+function BrandMark() {
+  return (
+    <svg
+      className="mark"
+      viewBox="0 0 256 256"
+      width={26}
+      height={26}
+      aria-hidden="true"
+    >
+      <circle
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={14}
+        cx={128}
+        cy={128}
+        r={114}
+      />
+      <circle fill="currentColor" cx={128} cy={128} r={18} />
+    </svg>
+  );
+}
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,12 +41,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <header className="site-header">
           <div className="inner">
-            <div>
-              <Link href="/" className="brand">
-                مناد
-              </Link>{' '}
+            <Link href="/" className="brand">
+              <BrandMark />
+              <span>مناد</span>
               <span className="tagline">گفتگوی انسان با حقیقت</span>
-            </div>
+            </Link>
             <nav className="nav">
               <Link href="/new">گفتگوی تازه</Link>
             </nav>

@@ -32,6 +32,13 @@
 { "reply": "پاسخ مناد", "turns": 3, "turnsLeft": 37 }
 ```
 
+**حالت جریانی:** با هدر `Accept: text/event-stream`، پاسخ به‌صورت SSE می‌آید:
+```
+event: delta   → data: { "text": "تکه‌ی بعدی پاسخ" }   (تکرارشونده)
+event: done    → data: { "turns": 3, "turnsLeft": 37 }
+event: error   → data: { "code": "…", "message": "…" }
+```
+
 ## `POST /api/conversations/:id/finish`
 بدنه: `{ "ownerToken": "…", "publish": true }` — با `publish: false` گفتگو خصوصی می‌ماند.
 هنگام انتشار، متن‌ها نگارش‌پیرایی می‌شوند و متن اصلیِ تغییریافته حفظ می‌شود.

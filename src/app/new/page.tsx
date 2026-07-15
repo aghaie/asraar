@@ -42,6 +42,7 @@ export default function NewConversationPage() {
     if (!content || busy) return;
     setBusy(true);
     setError(null);
+    let monadStarted = false;
     try {
       if (!conversationRef.current) {
         const started = await postJson('/api/conversations', {});
@@ -54,21 +55,73 @@ export default function NewConversationPage() {
       const { id, ownerToken } = conversationRef.current;
       setMessages((prev) => [...prev, { role: 'seeker', content }]);
       setInput('');
-      const result = await postJson(`/api/conversations/${id}/messages`, {
-        ownerToken,
-        content,
+
+      const response = await fetch(`/api/conversations/${id}/messages`, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'text/event-stream',
+        },
+        body: JSON.stringify({ ownerToken, content }),
       });
-      setMessages((prev) => [
-        ...prev,
-        { role: 'monad', content: result.reply as string },
-      ]);
+
+      if (!response.headers.get('content-type')?.includes('text/event-stream')) {
+        const data = (await response.json().catch(() => ({}))) as ApiError;
+        throw new Error(data.error?.message ?? 'خطایی رخ داد. دوباره تلاش کنید.');
+      }
+
+      // خواندن جریان SSE: delta / done / error
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let streamError: string | null = null;
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const frames = buffer.split('\n\n');
+        buffer = frames.pop() ?? '';
+        for (const frame of frames) {
+          let event = 'message';
+          let data = '';
+          for (const line of frame.split('\n')) {
+            if (line.startsWith('event:')) event = line.slice(6).trim();
+            else if (line.startsWith('data:')) data += line.slice(5).trim();
+          }
+          if (!data) continue;
+          const payload = JSON.parse(data) as { text?: string; message?: string };
+          if (event === 'delta' && payload.text) {
+            if (!monadStarted) {
+              monadStarted = true;
+              setMessages((prev) => [...prev, { role: 'monad', content: '' }]);
+            }
+            setMessages((prev) => {
+              const next = [...prev];
+              const last = next[next.length - 1];
+              next[next.length - 1] = {
+                ...last,
+                content: last.content + payload.text,
+              };
+              return next;
+            });
+          } else if (event === 'error') {
+            streamError = payload.message ?? 'خطایی رخ داد.';
+          }
+        }
+      }
+      if (streamError) throw new Error(streamError);
+      if (!monadStarted) throw new Error('پاسخی دریافت نشد. دوباره تلاش کنید.');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'خطایی رخ داد.');
-      setMessages((prev) =>
-        prev.length && prev[prev.length - 1].role === 'seeker'
-          ? prev.slice(0, -1)
-          : prev,
-      );
+      // بازگرداندن نوبت ناتمام: پیام ناقص مناد و پیام جوینده حذف می‌شوند
+      setMessages((prev) => {
+        const next = [...prev];
+        if (monadStarted && next.length && next[next.length - 1].role === 'monad') {
+          next.pop();
+        }
+        if (next.length && next[next.length - 1].role === 'seeker') next.pop();
+        return next;
+      });
       setInput(content);
     } finally {
       setBusy(false);
@@ -134,12 +187,14 @@ export default function NewConversationPage() {
             {m.content}
           </div>
         ))}
-        {busy && phase === 'chatting' && (
-          <div className="msg monad">
-            <div className="who">مناد</div>
-            در حال اندیشیدن…
-          </div>
-        )}
+        {busy &&
+          phase === 'chatting' &&
+          messages[messages.length - 1]?.role !== 'monad' && (
+            <div className="msg monad">
+              <div className="who">مناد</div>
+              در حال اندیشیدن…
+            </div>
+          )}
       </div>
 
       {error && <div className="notice error">{error}</div>}
