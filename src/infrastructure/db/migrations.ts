@@ -77,4 +77,36 @@ export const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    version: 4,
+    name: 'identity',
+    sql: `
+      CREATE TABLE users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE,
+        google_sub TEXT UNIQUE,
+        display_name TEXT,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE TABLE sessions (
+        token TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL
+      );
+      CREATE INDEX idx_sessions_user ON sessions(user_id);
+
+      CREATE TABLE login_tokens (
+        token_hash TEXT PRIMARY KEY,
+        email TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        expires_at TEXT NOT NULL,
+        used INTEGER NOT NULL DEFAULT 0
+      );
+
+      ALTER TABLE conversations ADD COLUMN user_id TEXT REFERENCES users(id);
+      CREATE INDEX idx_conversations_user ON conversations(user_id);
+    `,
+  },
 ];

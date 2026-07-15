@@ -17,10 +17,14 @@ export interface StartConversationResult {
   remainingToday: number;
 }
 
-/** آغاز یک گفتگوی تازه — بدون ثبت‌نام، فقط با سهمیه‌ی روزانه. */
+/**
+ * آغاز یک گفتگوی تازه — بدون ثبت‌نام، فقط با سهمیه‌ی روزانه.
+ * userId اختیاری است: اگر کاربر وارد شده باشد، گفتگو به بایگانی خصوصی او وصل می‌شود.
+ */
 export function startConversation(
   deps: StartConversationDeps,
   clientKey: string,
+  userId: string | null = null,
 ): StartConversationResult {
   const quota = deps.rateLimiter.consume(clientKey, 'conversation');
   if (!quota.allowed) {
@@ -33,6 +37,7 @@ export function startConversation(
   const conversation: Conversation = {
     id: deps.newId(),
     ownerToken: deps.newToken(),
+    userId,
     title: null,
     status: 'active',
     messages: [],

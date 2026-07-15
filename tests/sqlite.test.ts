@@ -9,6 +9,7 @@ function makeConversation(id: string): Conversation {
   return {
     id,
     ownerToken: `token-${id}`,
+    userId: null,
     title: null,
     status: 'active',
     messages: [],
@@ -84,7 +85,7 @@ describe('SqliteConversationRepository', () => {
 describe('SqliteRateLimiter', () => {
   it('سهمیه‌ی روزانه را درست می‌شمارد', () => {
     const db = openDatabase(':memory:');
-    const limiter = new SqliteRateLimiter(db, { conversation: 2, message: 5, translation: 1 });
+    const limiter = new SqliteRateLimiter(db, { conversation: 2, message: 5, translation: 1, login: 3 });
 
     expect(limiter.consume('k1', 'conversation')).toEqual({ allowed: true, remaining: 1 });
     expect(limiter.consume('k1', 'conversation')).toEqual({ allowed: true, remaining: 0 });

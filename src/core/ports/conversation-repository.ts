@@ -4,6 +4,7 @@ import type {
   Message,
   PublishedSummary,
 } from '../domain/conversation';
+import type { OwnedConversationSummary } from '../domain/user';
 
 /** پورت مخزن گفتگوها — پیاده‌سازی فعلی SQLite است و بعداً بدون تغییر Core عوض می‌شود. */
 export interface ConversationRepository {
@@ -32,4 +33,12 @@ export interface ConversationRepository {
     valuable: boolean,
     at: string,
   ): 'recorded' | 'duplicate';
+
+  /** بایگانی خصوصی کاربر: همه‌ی گفتگوهای او (هر وضعیتی)، جدیدترین اول. */
+  listByUser(userId: string): OwnedConversationSummary[];
+  /**
+   * چسباندن یک گفتگوی ناشناس به اکانت، با اثبات مالکیت (owner_token).
+   * فقط اگر گفتگو هنوز به کاربری وصل نباشد. true اگر انجام شد.
+   */
+  claimConversation(conversationId: string, ownerToken: string, userId: string): boolean;
 }

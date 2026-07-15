@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { currentUserServer } from '@/lib/auth';
 import './globals.css';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: {
@@ -35,7 +38,9 @@ function BrandMark() {
   );
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const user = await currentUserServer();
+
   return (
     <html lang="fa" dir="rtl">
       <body>
@@ -49,6 +54,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <nav className="nav">
               <Link href="/new">گفتگوی تازه</Link>
               <Link href="/gift">هدیه</Link>
+              {user ? (
+                <Link href="/profile">{user.displayName ?? 'پروفایل'}</Link>
+              ) : (
+                <Link href="/login">ورود</Link>
+              )}
             </nav>
           </div>
         </header>

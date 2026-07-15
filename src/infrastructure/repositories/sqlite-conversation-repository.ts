@@ -7,10 +7,12 @@ import {
   type PublishedSummary,
 } from '@/core/domain/conversation';
 import type { ConversationRepository } from '@/core/ports/conversation-repository';
+import type { OwnedConversationSummary } from '@/core/domain/user';
 
 interface ConversationRow {
   id: string;
   owner_token: string;
+  user_id: string | null;
   title: string | null;
   status: ConversationStatus;
   value_up: number;
@@ -32,10 +34,20 @@ export class SqliteConversationRepository implements ConversationRepository {
   create(c: Conversation): void {
     this.db
       .prepare(
-        `INSERT INTO conversations (id, owner_token, title, status, value_up, value_down, created_at, published_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO conversations (id, owner_token, user_id, title, status, value_up, value_down, created_at, published_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run(c.id, c.ownerToken, c.title, c.status, c.valueUp, c.valueDown, c.createdAt, c.publishedAt);
+      .run(
+        c.id,
+        c.ownerToken,
+        c.userId,
+        c.title,
+        c.status,
+        c.valueUp,
+        c.valueDown,
+        c.createdAt,
+        c.publishedAt,
+      );
   }
 
   findById(id: string): Conversation | null {
@@ -60,6 +72,7 @@ export class SqliteConversationRepository implements ConversationRepository {
     return {
       id: row.id,
       ownerToken: row.owner_token,
+      userId: row.user_id,
       title: row.title,
       status: row.status,
       messages,
@@ -68,6 +81,37 @@ export class SqliteConversationRepository implements ConversationRepository {
       createdAt: row.created_at,
       publishedAt: row.published_at,
     };
+  }
+
+  listByUser(userId: string): OwnedConversationSummary[] {
+    const rows = this.db
+      .prepare(
+        `SELECT id, title, status, created_at, published_at,
+                (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = conversations.id AND m.role = 'seeker') AS turns
+         FROM conversations
+         WHERE user_id = ?
+         ORDER BY created_at DESC`,
+      )
+      .all(userId) as unknown as (ConversationRow & { turns: number })[];
+
+    return rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      turns: row.turns,
+      createdAt: row.created_at,
+      publishedAt: row.published_at,
+    }));
+  }
+
+  claimConversation(conversationId: string, ownerToken: string, userId: string): boolean {
+    const result = this.db
+      .prepare(
+        `UPDATE conversations SET user_id = ?
+         WHERE id = ? AND owner_token = ? AND user_id IS NULL`,
+      )
+      .run(userId, conversationId, ownerToken);
+    return Number(result.changes) > 0;
   }
 
   appendMessages(id: string, messages: Message[]): void {

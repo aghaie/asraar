@@ -5,6 +5,7 @@ export interface RateLimits {
   conversation: number;
   message: number;
   translation: number;
+  login: number;
 }
 
 /**

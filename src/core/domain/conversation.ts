@@ -21,6 +21,8 @@ export interface Conversation {
   id: string;
   /** توکن مالکیت؛ تنها راه ادامه یا پایان دادن به گفتگو. هویت ثبت‌نامی وجود ندارد. */
   ownerToken: string;
+  /** اگر کاربر هنگام آغاز وارد بوده باشد، شناسه‌ی او؛ وگرنه null (ناشناس). */
+  userId: string | null;
   title: string | null;
   status: ConversationStatus;
   messages: Message[];

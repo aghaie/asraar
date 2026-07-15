@@ -1,6 +1,6 @@
 /** پورت محدودسازی مصرف — کلید معمولاً هش ناشناس IP است. */
 
-export type RateAction = 'conversation' | 'message' | 'translation';
+export type RateAction = 'conversation' | 'message' | 'translation' | 'login';
 
 export interface RateLimiter {
   /**

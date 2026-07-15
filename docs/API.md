@@ -51,6 +51,21 @@ event: error   → data: { "code": "…", "message": "…" }
 
 پاسخ: `{ "ok": true }`
 
+## صفحه‌ی `/search?q=…`
+جست‌وجوی تمام‌متن در گفتگوهای منتشرشده (SSR، نه API). فرم جست‌وجو در صفحه‌ی اصلی هم هست.
+صفحه‌ی اصلی بازه‌ی زمانی می‌گیرد: `/?t=day|yesterday|week|month|year|all`.
+
+## هویت (اختیاری)
+ورود اجباری نیست؛ همه‌ی مسیرهای بالا بدون ورود کار می‌کنند. اگر کاربر وارد باشد (کوکی `monad_session`)، گفتگوی تازه به بایگانی خصوصی او وصل می‌شود.
+
+- `POST /api/auth/email` — بدنه `{ "email": "…" }` → لینک جادویی می‌فرستد (پاسخ همیشه `{ "ok": true }`).
+- `GET /api/auth/email/callback?token=…` — لینک یک‌بارمصرف؛ نشست می‌سازد و به `/profile` می‌برد.
+- `GET /api/auth/google` و `/api/auth/google/callback` — ورود با گوگل (اگر پیکربندی شده باشد).
+- `POST /api/auth/logout` — خروج.
+- `POST /api/profile/name` — بدنه `{ "name": "…" }` (نیازمند نشست).
+- `POST /api/conversations/claim` — بدنه `{ "conversationId", "ownerToken" }` (نیازمند نشست) — چسباندن گفتگوی ناشناس به حساب.
+- صفحات `/login` و `/profile` (بایگانی خصوصی).
+
 ## `GET /api/conversations/:id/translation?lang=en`
 خواندن گفتگوی منتشرشده به زبان خواننده. `lang`: کد ISO 639-1 (مثل `en`, `ar`, `tr`).
 ترجمه‌ها برای همیشه کش می‌شوند؛ فقط نخستین درخواستِ هر زبان سهمیه مصرف می‌کند.

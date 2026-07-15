@@ -13,6 +13,8 @@ import type {
   TranslationStore,
   Translator,
 } from '@/core/ports/translator';
+import type { OwnedConversationSummary, Session, User } from '@/core/domain/user';
+import type { IdentityRepository } from '@/core/ports/identity-repository';
 
 export class InMemoryConversationRepository implements ConversationRepository {
   private readonly store = new Map<string, Conversation>();
@@ -99,6 +101,71 @@ export class InMemoryConversationRepository implements ConversationRepository {
     else c.valueDown += 1;
     return 'recorded';
   }
+
+  listByUser(userId: string): OwnedConversationSummary[] {
+    return [...this.store.values()]
+      .filter((c) => c.userId === userId)
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+      .map((c) => ({
+        id: c.id,
+        title: c.title,
+        status: c.status,
+        turns: c.messages.filter((m) => m.role === 'seeker').length,
+        createdAt: c.createdAt,
+        publishedAt: c.publishedAt,
+      }));
+  }
+
+  claimConversation(conversationId: string, ownerToken: string, userId: string): boolean {
+    const c = this.store.get(conversationId);
+    if (!c || c.ownerToken !== ownerToken || c.userId !== null) return false;
+    c.userId = userId;
+    return true;
+  }
+}
+
+export class InMemoryIdentityRepository implements IdentityRepository {
+  private readonly users = new Map<string, User>();
+  private readonly sessions = new Map<string, Session>();
+  private readonly loginTokens = new Map<
+    string,
+    { email: string; expiresAt: string; used: boolean }
+  >();
+
+  findUserByEmail(email: string): User | null {
+    return [...this.users.values()].find((u) => u.email === email) ?? null;
+  }
+  findUserByGoogleSub(sub: string): User | null {
+    return [...this.users.values()].find((u) => u.googleSub === sub) ?? null;
+  }
+  findUserById(id: string): User | null {
+    return this.users.get(id) ?? null;
+  }
+  createUser(user: User): void {
+    this.users.set(user.id, { ...user });
+  }
+  updateDisplayName(userId: string, name: string): void {
+    const u = this.users.get(userId);
+    if (u) u.displayName = name;
+  }
+  createSession(session: Session): void {
+    this.sessions.set(session.token, { ...session });
+  }
+  findSession(token: string): Session | null {
+    return this.sessions.get(token) ?? null;
+  }
+  deleteSession(token: string): void {
+    this.sessions.delete(token);
+  }
+  createLoginToken(tokenHash: string, email: string, _c: string, expiresAt: string): void {
+    this.loginTokens.set(tokenHash, { email, expiresAt, used: false });
+  }
+  consumeLoginToken(tokenHash: string, nowIso: string): string | null {
+    const t = this.loginTokens.get(tokenHash);
+    if (!t || t.used || t.expiresAt < nowIso) return null;
+    t.used = true;
+    return t.email;
+  }
 }
 
 export class StubRateLimiter implements RateLimiter {
@@ -158,7 +225,13 @@ export function testDeps() {
   counter = 0;
   return {
     repo: new InMemoryConversationRepository(),
-    rateLimiter: new StubRateLimiter({ conversation: 2, message: 10, translation: 2 }),
+    identity: new InMemoryIdentityRepository(),
+    rateLimiter: new StubRateLimiter({
+      conversation: 2,
+      message: 10,
+      translation: 2,
+      login: 5,
+    }),
     engine: new StubEngine(),
     translator: new StubTranslator(),
     store: new InMemoryTranslationStore(),
