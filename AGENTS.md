@@ -52,6 +52,7 @@ Clean Architecture در یک Monolith ماژولار Next.js 15: `src/core` (د�
 
 ## ۷) هشدارهای عملیاتی
 - `MONAD_SALT` تولیدی باید تصادفی و ثابت باشد (تغییرش سهمیه‌ها و یکتایی رأی را ریست می‌کند)
+- دو موتور LLM موجود است: Anthropic و OpenAI (ADR-0012). انتخاب با `MONAD_ENGINE` یا وجود کلید (`ANTHROPIC_API_KEY` / `OPENAI_API_KEY`). محیط توسعه‌ی فعلی مالک با کلید OpenAI کار می‌کند
 - سرور ایران ممکن است به `api.anthropic.com` نرسد → `ANTHROPIC_BASE_URL` را به relay بده
 - SQLite تک‌نویسنده است → فقط یک replica تا قبل از مهاجرت DB
 - پشت CDN/پراکسی، هدر `X-Forwarded-For` باید IP واقعی را بدهد وگرنه سهمیه‌ها مشترک می‌شوند

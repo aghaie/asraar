@@ -1,0 +1,53 @@
+import type { EngineTurn, LlmEngine } from '@/core/ports/llm-engine';
+import type { Translator } from '@/core/ports/translator';
+import { MONAD_SYSTEM_PROMPT } from './monad-system-prompt';
+import { openAiComplete } from './openai-client';
+import {
+  parseTranslatedArray,
+  TRANSLATOR_SYSTEM_PROMPT,
+} from './translator-system-prompt';
+
+/** آداپتر OpenAI برای پورت LlmEngine — بدون SDK، فقط fetch. (ADR-0004) */
+export class OpenAiEngine implements LlmEngine {
+  readonly name = 'openai';
+
+  constructor(
+    private readonly apiKey: string,
+    private readonly model: string,
+    private readonly maxTokens = 1500,
+  ) {}
+
+  async reply(history: EngineTurn[]): Promise<string> {
+    return openAiComplete({
+      apiKey: this.apiKey,
+      model: this.model,
+      system: MONAD_SYSTEM_PROMPT,
+      maxTokens: this.maxTokens,
+      messages: history.map((turn) => ({
+        role: turn.role === 'seeker' ? 'user' : 'assistant',
+        content: turn.content,
+      })),
+    });
+  }
+}
+
+/** مترجم مبتنی بر OpenAI برای پورت Translator */
+export class OpenAiTranslator implements Translator {
+  readonly name = 'openai-translator';
+
+  constructor(
+    private readonly apiKey: string,
+    private readonly model: string,
+  ) {}
+
+  async translate(texts: string[], targetLanguage: string): Promise<string[]> {
+    const raw = await openAiComplete({
+      apiKey: this.apiKey,
+      model: this.model,
+      system: TRANSLATOR_SYSTEM_PROMPT,
+      maxTokens: 8000,
+      messages: [{ role: 'user', content: JSON.stringify({ targetLanguage, texts }) }],
+    });
+    return parseTranslatedArray(raw, texts.length);
+  }
+}

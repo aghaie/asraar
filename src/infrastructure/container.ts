@@ -7,6 +7,7 @@ import { openDatabase } from './db/database';
 import { AnthropicEngine } from './llm/anthropic-engine';
 import { AnthropicTranslator, FakeTranslator } from './llm/anthropic-translator';
 import { FakeEngine } from './llm/fake-engine';
+import { OpenAiEngine, OpenAiTranslator } from './llm/openai-engine';
 import { SqliteRateLimiter } from './rate-limit/sqlite-rate-limiter';
 import { SqliteConversationRepository } from './repositories/sqlite-conversation-repository';
 import { SqliteTranslationStore } from './translations/sqlite-translation-store';
@@ -29,15 +30,45 @@ function intFromEnv(name: string, fallback: number): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+/**
+ * انتخاب موتور: MONAD_ENGINE اگر صریح تنظیم شده باشد؛ وگرنه هر کلیدی که موجود است
+ * (اولویت با Anthropic). بدون کلید → موتور آزمایشی.
+ */
+function selectEngine(): { engine: LlmEngine; translator: Translator } {
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  const openaiKey = process.env.OPENAI_API_KEY;
+  const forced = process.env.MONAD_ENGINE;
+
+  const provider =
+    forced === 'anthropic' || forced === 'openai' || forced === 'fake'
+      ? forced
+      : anthropicKey
+        ? 'anthropic'
+        : openaiKey
+          ? 'openai'
+          : 'fake';
+
+  if (provider === 'anthropic' && anthropicKey) {
+    const model = process.env.MONAD_MODEL ?? 'claude-sonnet-5';
+    return {
+      engine: new AnthropicEngine(anthropicKey, model),
+      translator: new AnthropicTranslator(anthropicKey, model),
+    };
+  }
+  if (provider === 'openai' && openaiKey) {
+    const model = process.env.MONAD_MODEL ?? 'gpt-5';
+    return {
+      engine: new OpenAiEngine(openaiKey, model),
+      translator: new OpenAiTranslator(openaiKey, model),
+    };
+  }
+  return { engine: new FakeEngine(), translator: new FakeTranslator() };
+}
+
 function build(): Container {
   const db = openDatabase(process.env.MONAD_DB_PATH ?? './data/monad.db');
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  const model = process.env.MONAD_MODEL ?? 'claude-sonnet-5';
-  const engine: LlmEngine = apiKey ? new AnthropicEngine(apiKey, model) : new FakeEngine();
-  const translator: Translator = apiKey
-    ? new AnthropicTranslator(apiKey, model)
-    : new FakeTranslator();
+  const { engine, translator } = selectEngine();
 
   console.log(
     JSON.stringify({ level: 'info', msg: 'monad container built', engine: engine.name }),
