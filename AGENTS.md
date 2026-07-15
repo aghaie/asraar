@@ -37,6 +37,7 @@ Clean Architecture در یک Monolith ماژولار Next.js 15: `src/core` (د�
 - هر تغییر schema → migration جدید در `src/infrastructure/db/migrations.ts` (نسخه‌ی بعدی؛ هرگز migration قبلی را ویرایش نکن)
 - Core هرگز import از `next/*`، `node:sqlite` یا `fetch` مستقیم نداشته باشد — فقط پورت
 - قبل از ادعای اتمام: `npm test && npm run build` سبز باشد
+- **پس از هر پیشرفت مهم، یک پست ساده و همه‌فهم به بالای `docs/telegram-posts.md` اضافه کن** (برای کانال تلگرام مناد — مردم در جریان پیشرفت باشند)
 
 ## ۶) نقشه‌ی راه پس از MVP (به ترتیب پیشنهادی)
 1. **اعمال دیزاین نهایی** خروجی Claude Design روی توکن‌ها/کلاس‌ها
