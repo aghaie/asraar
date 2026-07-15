@@ -65,4 +65,16 @@ export const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    version: 3,
+    name: 'search_index',
+    sql: `
+      CREATE VIRTUAL TABLE search_index USING fts5(
+        conversation_id UNINDEXED,
+        title,
+        body,
+        tokenize = 'unicode61 remove_diacritics 2'
+      );
+    `,
+  },
 ];

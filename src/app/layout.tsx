@@ -48,6 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </Link>
             <nav className="nav">
               <Link href="/new">گفتگوی تازه</Link>
+              <Link href="/gift">هدیه</Link>
             </nav>
           </div>
         </header>

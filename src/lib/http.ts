@@ -8,6 +8,33 @@ export function clientKeyFrom(request: Request, salt: string): string {
   return crypto.createHash('sha256').update(`${salt}:${ip}`).digest('hex');
 }
 
+/**
+ * زبان مرجّح خواننده از هدر Accept-Language؛ اولین زبانِ پشتیبانی‌شده (با احترام به q).
+ * اگر هیچ‌کدام پشتیبانی نشوند، رشته‌ی خالی برمی‌گردد.
+ */
+export function preferredLanguageFrom(
+  acceptHeader: string | null,
+  supported: string[],
+): string {
+  if (!acceptHeader) return '';
+  const ranked = acceptHeader
+    .split(',')
+    .map((part) => {
+      const [tag, ...params] = part.trim().split(';');
+      const qParam = params.find((p) => p.trim().startsWith('q='));
+      const q = qParam ? Number.parseFloat(qParam.split('=')[1]) : 1;
+      return { lang: tag.trim().toLowerCase().split('-')[0], q: Number.isFinite(q) ? q : 1 };
+    })
+    .filter((x) => x.lang.length > 0)
+    .sort((a, b) => b.q - a.q);
+
+  const supportedSet = new Set(supported);
+  for (const { lang } of ranked) {
+    if (supportedSet.has(lang)) return lang;
+  }
+  return '';
+}
+
 const STATUS_BY_CODE: Record<DomainErrorCode, number> = {
   NOT_FOUND: 404,
   FORBIDDEN: 403,

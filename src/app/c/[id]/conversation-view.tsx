@@ -1,11 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { LANGUAGES, RTL_LANGS, labelOf } from './languages';
 
 interface ViewMessage {
   role: 'seeker' | 'monad';
   content: string;
   originalContent?: string | null;
+}
+
+interface Translation {
+  lang: string;
+  title: string;
+  messages: ViewMessage[];
 }
 
 interface Props {
@@ -15,37 +22,25 @@ interface Props {
   valueUp: number;
   valueDown: number;
   messages: ViewMessage[];
+  /** زبان مرجّح خواننده (اگر با زبان اصلی فرق داشته باشد) — برای پیشنهاد ترجمه */
+  preferredLang?: string | null;
+  /** ترجمه‌ی ازپیش‌کش‌شده به زبان خواننده (رایگان، بدون فراخوان تازه) */
+  initialTranslation?: Translation | null;
 }
 
-const LANGUAGES: { code: string; label: string }[] = [
-  { code: '', label: 'زبان اصلی' },
-  { code: 'en', label: 'English' },
-  { code: 'ar', label: 'العربية' },
-  { code: 'tr', label: 'Türkçe' },
-  { code: 'ur', label: 'اردو' },
-  { code: 'id', label: 'Bahasa Indonesia' },
-  { code: 'fr', label: 'Français' },
-  { code: 'de', label: 'Deutsch' },
-  { code: 'es', label: 'Español' },
-  { code: 'ru', label: 'Русский' },
-  { code: 'zh', label: '中文' },
-  { code: 'hi', label: 'हिन्दी' },
-  { code: 'fa', label: 'فارسی' },
-];
-
-const RTL_LANGS = new Set(['fa', 'ar', 'ur', '']);
-
 export function ConversationView(props: Props) {
-  const [lang, setLang] = useState('');
-  const [translated, setTranslated] = useState<{
-    lang: string;
-    title: string;
-    messages: ViewMessage[];
-  } | null>(null);
+  const [lang, setLang] = useState(props.initialTranslation?.lang ?? '');
+  const [translated, setTranslated] = useState<Translation | null>(
+    props.initialTranslation ?? null,
+  );
   const [translating, setTranslating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signal, setSignal] = useState<string | null>(null);
   const [counts, setCounts] = useState({ up: props.valueUp, down: props.valueDown });
+
+  // پیشنهاد ترجمه فقط وقتی زبان خواننده متفاوت است، هنوز اصل نمایش داده می‌شود، و کش نبود.
+  const showOffer =
+    !!props.preferredLang && lang === '' && !props.initialTranslation;
 
   const active = translated && lang === translated.lang ? translated : null;
   const title = active?.title ?? props.title;
@@ -121,6 +116,20 @@ export function ConversationView(props: Props) {
         {translating && <span>در حال ترجمه…</span>}
         {active && <span>ترجمه‌ی ماشینی — متن اصلی معیار است.</span>}
       </div>
+
+      {showOffer && (
+        <div className="notice" dir="rtl" style={{ marginTop: '0.8rem' }}>
+          این گفتگو را به {labelOf(props.preferredLang!)} بخوانی؟{' '}
+          <button
+            className="btn secondary"
+            style={{ minHeight: 'auto', padding: '0.2rem 0.9rem', marginInlineStart: '0.5rem' }}
+            onClick={() => void changeLanguage(props.preferredLang!)}
+            disabled={translating}
+          >
+            ترجمه کن
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="notice error" dir="rtl" style={{ marginTop: '0.8rem' }}>

@@ -116,6 +116,16 @@ export class SqliteConversationRepository implements ConversationRepository {
           insert.run(id, i + 1, m.role, m.content, m.originalContent, m.createdAt);
         });
       }
+
+      // ایندکس جست‌وجو فقط برای گفتگوهای منتشرشده ساخته می‌شود.
+      if (status === 'published' && normalizedMessages) {
+        const body = normalizedMessages.map((m) => m.content).join('\n');
+        this.db
+          .prepare(
+            'INSERT INTO search_index (conversation_id, title, body) VALUES (?, ?, ?)',
+          )
+          .run(id, title ?? '', body);
+      }
       this.db.exec('COMMIT');
     } catch (error) {
       this.db.exec('ROLLBACK');
@@ -123,30 +133,65 @@ export class SqliteConversationRepository implements ConversationRepository {
     }
   }
 
-  listPublished(limit: number): PublishedSummary[] {
+  listPublished(
+    limit: number,
+    sinceIso?: string | null,
+    untilIso?: string | null,
+  ): PublishedSummary[] {
+    const clauses = ["status = 'published'"];
+    const params: (string | number)[] = [];
+    if (sinceIso) {
+      clauses.push('published_at >= ?');
+      params.push(sinceIso);
+    }
+    if (untilIso) {
+      clauses.push('published_at < ?');
+      params.push(untilIso);
+    }
+    params.push(limit);
+
     const rows = this.db
       .prepare(
         `SELECT id, title, status, value_up, value_down, published_at,
                 (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = conversations.id AND m.role = 'seeker') AS turns
          FROM conversations
-         WHERE status = 'published'
+         WHERE ${clauses.join(' AND ')}
          ORDER BY published_at DESC
          LIMIT ?`,
       )
-      .all(limit) as unknown as (ConversationRow & { turns: number })[];
+      .all(...params) as unknown as (ConversationRow & { turns: number })[];
 
-    return rows.map((row) => {
-      const conversation = this.findById(row.id)!;
-      return {
-        id: row.id,
-        title: row.title ?? 'گفتگو',
-        excerpt: excerptOf(conversation),
-        turns: row.turns,
-        valueUp: row.value_up,
-        valueDown: row.value_down,
-        publishedAt: row.published_at!,
-      };
-    });
+    return rows.map((row) => this.summaryFromRow(row));
+  }
+
+  search(match: string, limit: number): PublishedSummary[] {
+    if (match.length === 0) return [];
+    const rows = this.db
+      .prepare(
+        `SELECT c.id, c.title, c.status, c.value_up, c.value_down, c.published_at,
+                (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id AND m.role = 'seeker') AS turns
+         FROM search_index s
+         JOIN conversations c ON c.id = s.conversation_id
+         WHERE search_index MATCH ? AND c.status = 'published'
+         ORDER BY bm25(search_index)
+         LIMIT ?`,
+      )
+      .all(match, limit) as unknown as (ConversationRow & { turns: number })[];
+
+    return rows.map((row) => this.summaryFromRow(row));
+  }
+
+  private summaryFromRow(row: ConversationRow & { turns: number }): PublishedSummary {
+    const conversation = this.findById(row.id)!;
+    return {
+      id: row.id,
+      title: row.title ?? 'گفتگو',
+      excerpt: excerptOf(conversation),
+      turns: row.turns,
+      valueUp: row.value_up,
+      valueDown: row.value_down,
+      publishedAt: row.published_at!,
+    };
   }
 
   recordValueSignal(

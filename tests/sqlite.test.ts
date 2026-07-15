@@ -52,6 +52,33 @@ describe('SqliteConversationRepository', () => {
     expect(repo.findById('c1')!.valueUp).toBe(1);
     expect(repo.findById('c1')!.valueDown).toBe(0);
   });
+
+  it('جست‌وجوی FTS و فیلتر بازه‌ی زمانی', () => {
+    const db = openDatabase(':memory:');
+    const repo = new SqliteConversationRepository(db);
+
+    function publish(id: string, title: string, body: string, at: string) {
+      repo.create(makeConversation(id));
+      const msgs = [
+        { role: 'seeker' as const, content: title, originalContent: null, createdAt: at },
+        { role: 'monad' as const, content: body, originalContent: null, createdAt: at },
+      ];
+      repo.appendMessages(id, msgs);
+      repo.finish(id, 'published', title, msgs, at);
+    }
+
+    publish('a', 'معنای آزادی چیست؟', 'آزادی یعنی رهایی از بندگی غیر خدا', '2026-07-16T09:00:00Z');
+    publish('b', 'عدالت چیست؟', 'عدالت نهادن هر چیز در جای خود است', '2026-07-10T09:00:00Z');
+
+    // جست‌وجو
+    expect(repo.search('"آزادی"*', 10).map((r) => r.id)).toEqual(['a']);
+    expect(repo.search('"عدالت"*', 10).map((r) => r.id)).toEqual(['b']);
+    expect(repo.search('"ققنوس"*', 10)).toHaveLength(0);
+
+    // بازه‌ی زمانی: فقط از ۱۵ ژوئیه به بعد
+    const recent = repo.listPublished(10, '2026-07-15T00:00:00Z', null);
+    expect(recent.map((r) => r.id)).toEqual(['a']);
+  });
 });
 
 describe('SqliteRateLimiter', () => {

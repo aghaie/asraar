@@ -44,19 +44,44 @@ export class InMemoryConversationRepository implements ConversationRepository {
     if (normalizedMessages) c.messages = structuredClone(normalizedMessages);
   }
 
-  listPublished(limit: number): PublishedSummary[] {
+  listPublished(
+    limit: number,
+    sinceIso?: string | null,
+    untilIso?: string | null,
+  ): PublishedSummary[] {
     return [...this.store.values()]
       .filter((c) => c.status === 'published')
+      .filter((c) => (sinceIso ? c.publishedAt! >= sinceIso : true))
+      .filter((c) => (untilIso ? c.publishedAt! < untilIso : true))
+      .sort((a, b) => (a.publishedAt! < b.publishedAt! ? 1 : -1))
       .slice(0, limit)
-      .map((c) => ({
-        id: c.id,
-        title: c.title ?? 'گفتگو',
-        excerpt: excerptOf(c),
-        turns: c.messages.filter((m) => m.role === 'seeker').length,
-        valueUp: c.valueUp,
-        valueDown: c.valueDown,
-        publishedAt: c.publishedAt!,
-      }));
+      .map((c) => this.summary(c));
+  }
+
+  search(match: string, limit: number): PublishedSummary[] {
+    if (match.length === 0) return [];
+    // شبیه‌سازی ساده‌ی FTS: توکن‌های "word"* را به زیررشته تبدیل می‌کند.
+    const terms = (match.match(/"([^"]+)"/g) ?? []).map((t) => t.replace(/"/g, ''));
+    return [...this.store.values()]
+      .filter((c) => c.status === 'published')
+      .filter((c) => {
+        const hay = `${c.title ?? ''}\n${c.messages.map((m) => m.content).join('\n')}`;
+        return terms.every((t) => hay.includes(t));
+      })
+      .slice(0, limit)
+      .map((c) => this.summary(c));
+  }
+
+  private summary(c: Conversation): PublishedSummary {
+    return {
+      id: c.id,
+      title: c.title ?? 'گفتگو',
+      excerpt: excerptOf(c),
+      turns: c.messages.filter((m) => m.role === 'seeker').length,
+      valueUp: c.valueUp,
+      valueDown: c.valueDown,
+      publishedAt: c.publishedAt!,
+    };
   }
 
   private readonly signals = new Set<string>();

@@ -18,7 +18,13 @@ export interface ConversationRepository {
     normalizedMessages: Message[] | null,
     publishedAt: string | null,
   ): void;
-  listPublished(limit: number): PublishedSummary[];
+  /**
+   * فهرست گفتگوهای منتشرشده، جدیدترین اول.
+   * sinceIso/untilIso بازه‌ی اختیاری بر published_at را محدود می‌کنند (برای بازه‌های زمانی).
+   */
+  listPublished(limit: number, sinceIso?: string | null, untilIso?: string | null): PublishedSummary[];
+  /** جست‌وجوی تمام‌متنِ گفتگوهای منتشرشده؛ match باید عبارت امنِ FTS5 باشد. */
+  search(match: string, limit: number): PublishedSummary[];
   /** ثبت سیگنال ارزش؛ هر بیننده برای هر گفتگو فقط یک بار. */
   recordValueSignal(
     conversationId: string,
