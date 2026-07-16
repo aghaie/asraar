@@ -25,7 +25,7 @@
   "tabs.all": "همه",
 
   "card.turns": "{turns} پرسش",
-  "card.valuable": "{count} نفر گفتند ارزشمند بود",
+  "card.understood": "فهمِ {count} نفر را عمیق‌تر کرد",
 
   "new.title": "گفتگوی تازه",
   "new.intro": "پرسشت را بنویس — به هر زبانی که با آن می‌اندیشی. مناد عجله ندارد.",
@@ -90,12 +90,18 @@
   "conv.showOriginal": "متن اصلی",
   "conv.translating": "در حال ترجمه…",
   "conv.translateError": "ترجمه در دسترس نیست.",
-  "conv.valuableQ": "این گفتگو برایت ارزشمند بود؟",
-  "conv.valuable": "ارزشمند بود ({count})",
-  "conv.signalDuplicate": "نظر شما پیش‌تر ثبت شده است.",
+  "conv.signalQ": "این گفتگو چه اثری بر فهمِ تو داشت؟",
+  "conv.signalNote": "پاسخِ تو تنها به سنجشِ اثرِ گفتگو بر فهم کمک می‌کند؛ نه رأیِ منفی هست، نه نشانه‌ی محبوبیت.",
+  "signal.understoodMore": "فهمم را بیشتر کرد",
+  "signal.thoughtMore": "باعث شد بیشتر فکر کنم",
+  "conv.signalDuplicate": "این نشانه را پیش‌تر ثبت کرده‌ای.",
   "conv.signalThanks": "ثبت شد. سپاس.",
   "conv.signalError": "ثبت نشد.",
   "conv.titleFallback": "گفتگو",
+  "layer.reasoning": "استدلال — چگونه به این رسیدم",
+  "layer.quranic": "مبنای قرآنی",
+  "layer.loading": "در حال آماده‌سازی…",
+  "layer.error": "اکنون در دسترس نیست. بعداً تلاش کن.",
 
   "background.show": "چرا؟ دلیل و منبع",
   "background.hide": "بستن",
@@ -104,9 +110,10 @@
 
   "related.title": "گفتگوهای هم‌خانواده",
 
-  "branch.cta": "اگر ارزشمند نبود، خودت آن را به سمت حقیقت ببر",
-  "branch.continue": "از این‌جا خودت ادامه بده",
+  "branch.continue": "این مسیر را ادامه بده",
+  "branch.inheritedNote": "این بخش از گفتگوی اصلی به ارث رسیده است؛ از این‌جا مسیر را به سمتِ پرسش‌های خودت ادامه بده.",
   "branches.title": "شاخه‌ها ({count})",
+  "branches.note": "مسیرهایی که جویندگان از همین گفتگو ادامه داده‌اند — برای رسیدن به غنی‌ترین فهم.",
   "branch.fromParent": "این گفتگو از گفتگوی دیگری شاخه خورده است.",
   "branch.viewParent": "دیدن گفتگوی اصلی",
 
