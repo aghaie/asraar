@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "seed": "node scripts/seed.mjs"
+    "seed": "node scripts/seed.mjs",
+    "gen-i18n": "node scripts/gen-i18n.mjs"
   },
   "dependencies": {
     "@types/nodemailer": "^8.0.1",
