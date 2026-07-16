@@ -114,6 +114,19 @@ export class InMemoryConversationRepository implements ConversationRepository {
     return counts;
   }
 
+  listBranches(parentId: string) {
+    return [...this.store.values()]
+      .filter((c) => c.parentId === parentId && c.status === 'published')
+      .sort((a, b) => (a.publishedAt! < b.publishedAt! ? 1 : -1))
+      .map((c) => ({
+        id: c.id,
+        title: c.title ?? 'گفتگو',
+        branchPoint: c.branchPoint ?? 0,
+        turns: c.messages.filter((m) => m.role === 'seeker').length,
+        publishedAt: c.publishedAt!,
+      }));
+  }
+
   listByUser(userId: string): OwnedConversationSummary[] {
     return [...this.store.values()]
       .filter((c) => c.userId === userId)

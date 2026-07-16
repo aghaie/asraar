@@ -126,4 +126,15 @@ export const MIGRATIONS: Migration[] = [
       CREATE INDEX idx_signals_content ON epistemic_signals(content_type, content_id, kind);
     `,
   },
+  {
+    version: 6,
+    name: 'branching',
+    sql: `
+      -- شاخه‌زدن (ADR-0022، اصل ۲): «این مسیر را ادامه بده» — خنثی، نه مخالفت.
+      ALTER TABLE conversations ADD COLUMN parent_id TEXT REFERENCES conversations(id);
+      -- تا کدام نوبت از والد به ارث رسیده (شمارِ پیام‌های کلون‌شده)
+      ALTER TABLE conversations ADD COLUMN branch_point INTEGER;
+      CREATE INDEX idx_conversations_parent ON conversations(parent_id);
+    `,
+  },
 ];

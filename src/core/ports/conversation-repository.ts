@@ -1,4 +1,5 @@
 import type {
+  BranchSummary,
   Conversation,
   ConversationStatus,
   Message,
@@ -40,6 +41,9 @@ export interface ConversationRepository {
   ): 'recorded' | 'duplicate';
   /** شمارِ سیگنال‌های معرفتیِ یک گفتگو (برای صفحه‌ی گفتگو). */
   signalCounts(conversationId: string): SignalCounts;
+
+  /** فهرستِ شاخه‌های منتشرشده‌ی یک گفتگو (درختِ شاخه‌ها). */
+  listBranches(parentId: string): BranchSummary[];
 
   /** بایگانی خصوصی کاربر: همه‌ی گفتگوهای او (هر وضعیتی)، جدیدترین اول. */
   listByUser(userId: string): OwnedConversationSummary[];

@@ -10,6 +10,8 @@ function makeConversation(id: string): Conversation {
     id,
     ownerToken: `token-${id}`,
     userId: null,
+    parentId: null,
+    branchPoint: null,
     title: null,
     status: 'active',
     messages: [],

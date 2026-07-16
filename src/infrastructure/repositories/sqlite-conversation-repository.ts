@@ -1,6 +1,7 @@
 import type { DatabaseSync } from 'node:sqlite';
 import {
   excerptOf,
+  type BranchSummary,
   type Conversation,
   type ConversationStatus,
   type Message,
@@ -19,6 +20,8 @@ interface ConversationRow {
   id: string;
   owner_token: string;
   user_id: string | null;
+  parent_id: string | null;
+  branch_point: number | null;
   title: string | null;
   status: ConversationStatus;
   created_at: string;
@@ -40,13 +43,15 @@ export class SqliteConversationRepository implements ConversationRepository {
     // با پیش‌فرضِ DB صفر می‌مانند و در دامنه حضور ندارند.
     this.db
       .prepare(
-        `INSERT INTO conversations (id, owner_token, user_id, title, status, created_at, published_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO conversations (id, owner_token, user_id, parent_id, branch_point, title, status, created_at, published_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         c.id,
         c.ownerToken,
         c.userId,
+        c.parentId,
+        c.branchPoint,
         c.title,
         c.status,
         c.createdAt,
@@ -77,12 +82,34 @@ export class SqliteConversationRepository implements ConversationRepository {
       id: row.id,
       ownerToken: row.owner_token,
       userId: row.user_id,
+      parentId: row.parent_id,
+      branchPoint: row.branch_point,
       title: row.title,
       status: row.status,
       messages,
       createdAt: row.created_at,
       publishedAt: row.published_at,
     };
+  }
+
+  listBranches(parentId: string): BranchSummary[] {
+    const rows = this.db
+      .prepare(
+        `SELECT id, title, branch_point, published_at,
+                (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = conversations.id AND m.role = 'seeker') AS turns
+         FROM conversations
+         WHERE parent_id = ? AND status = 'published'
+         ORDER BY published_at DESC`,
+      )
+      .all(parentId) as unknown as (ConversationRow & { turns: number })[];
+
+    return rows.map((row) => ({
+      id: row.id,
+      title: row.title ?? 'گفتگو',
+      branchPoint: row.branch_point ?? 0,
+      turns: row.turns,
+      publishedAt: row.published_at!,
+    }));
   }
 
   listByUser(userId: string): OwnedConversationSummary[] {

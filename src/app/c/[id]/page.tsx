@@ -20,6 +20,7 @@ export default async function ConversationPage({
   if (!conversation || conversation.status !== 'published') notFound();
 
   const counts = repo.signalCounts(id);
+  const branches = repo.listBranches(id);
 
   // زبان مرجّح خواننده و زبان اصلی گفتگو
   const acceptLang = (await headers()).get('accept-language');
@@ -37,6 +38,13 @@ export default async function ConversationPage({
       title={conversation.title ?? 'گفتگو'}
       publishedAt={conversation.publishedAt!}
       signalCounts={counts}
+      branches={branches.map((b) => ({
+        id: b.id,
+        title: b.title,
+        branchPoint: b.branchPoint,
+        turns: b.turns,
+      }))}
+      parentId={conversation.parentId}
       messages={conversation.messages.map((m) => ({
         role: m.role,
         content: m.content,

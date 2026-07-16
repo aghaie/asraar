@@ -36,6 +36,17 @@ export async function finishConversation(
   if (conversation.messages.length === 0) {
     throw new DomainError('VALIDATION', 'گفتگوی خالی را نمی‌توان پایان داد.');
   }
+  // شاخه باید دستِ‌کم یک نوبتِ تازه فراتر از پیشوندِ به‌ارث‌رسیده داشته باشد (اصل ۲: ادامه‌ی فهم).
+  if (
+    input.publish &&
+    conversation.branchPoint !== null &&
+    conversation.messages.length <= conversation.branchPoint
+  ) {
+    throw new DomainError(
+      'VALIDATION',
+      'برای انتشار، این مسیر را دستِ‌کم با یک پرسش تازه ادامه بده.',
+    );
+  }
 
   if (!input.publish) {
     deps.repo.finish(conversation.id, 'private', null, null, null);

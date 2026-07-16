@@ -23,11 +23,24 @@ export interface Conversation {
   ownerToken: string;
   /** اگر کاربر هنگام آغاز وارد بوده باشد، شناسه‌ی او؛ وگرنه null (ناشناس). */
   userId: string | null;
+  /** اگر شاخه‌ای از گفتگوی دیگر باشد، شناسه‌ی والد (ADR-0022، اصل ۲)؛ وگرنه null. */
+  parentId: string | null;
+  /** شمارِ پیام‌های به‌ارث‌رسیده از والد (نقطه‌ی شاخه‌خوردن)؛ null اگر شاخه نباشد. */
+  branchPoint: number | null;
   title: string | null;
   status: ConversationStatus;
   messages: Message[];
   createdAt: string;
   publishedAt: string | null;
+}
+
+/** خلاصه‌ی یک شاخه‌ی منتشرشده برای نمایش در «درختِ شاخه‌ها». */
+export interface BranchSummary {
+  id: string;
+  title: string;
+  branchPoint: number;
+  turns: number;
+  publishedAt: string;
 }
 
 /**

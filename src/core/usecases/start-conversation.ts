@@ -38,6 +38,8 @@ export function startConversation(
     id: deps.newId(),
     ownerToken: deps.newToken(),
     userId,
+    parentId: null,
+    branchPoint: null,
     title: null,
     status: 'active',
     messages: [],
