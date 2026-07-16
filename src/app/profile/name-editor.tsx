@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useT } from '@/i18n/provider';
 
 export function NameEditor({
   initialName,
@@ -9,6 +10,7 @@ export function NameEditor({
   initialName: string;
   email: string | null;
 }) {
+  const { t } = useT();
   const [name, setName] = useState(initialName);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -27,11 +29,11 @@ export function NameEditor({
         body: JSON.stringify({ name: name.trim() }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error?.message ?? 'ذخیره نشد.');
+      if (!res.ok) throw new Error(data?.error?.message ?? t('profile.saveError'));
       setName(data.name as string);
       setSaved(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'ذخیره نشد.');
+      setError(err instanceof Error ? err.message : t('profile.saveError'));
     } finally {
       setBusy(false);
     }
@@ -49,8 +51,8 @@ export function NameEditor({
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="نام تو (اختیاری)"
-          aria-label="نام نمایشی"
+          placeholder={t('profile.namePlaceholder')}
+          aria-label={t('profile.nameAria')}
           maxLength={40}
           style={{
             flex: '1 1 12rem',
@@ -63,10 +65,12 @@ export function NameEditor({
           }}
         />
         <button className="btn secondary" type="submit" disabled={busy || !name.trim()}>
-          ذخیره‌ی نام
+          {t('profile.saveName')}
         </button>
       </form>
-      {saved && <div style={{ color: 'var(--accent)', fontSize: '0.85rem' }}>ذخیره شد.</div>}
+      {saved && (
+        <div style={{ color: 'var(--accent)', fontSize: '0.85rem' }}>{t('profile.saved')}</div>
+      )}
       {error && <div className="notice error">{error}</div>}
     </div>
   );

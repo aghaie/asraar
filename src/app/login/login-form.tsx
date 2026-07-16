@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useT } from '@/i18n/provider';
 
 export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
+  const { t } = useT();
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -20,22 +22,17 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
         body: JSON.stringify({ email: email.trim() }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error?.message ?? 'ارسال نشد.');
+      if (!res.ok) throw new Error(data?.error?.message ?? t('login.sendError'));
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'ارسال نشد.');
+      setError(err instanceof Error ? err.message : t('login.sendError'));
     } finally {
       setBusy(false);
     }
   }
 
   if (sent) {
-    return (
-      <div className="notice">
-        اگر این ایمیل حسابی داشته باشد یا تازه باشد، لینک ورود برایت فرستاده شد. صندوق
-        ورودی‌ات را ببین.
-      </div>
-    );
+    return <div className="notice">{t('login.sent')}</div>;
   }
 
   return (
@@ -45,8 +42,8 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="ایمیل تو"
-          aria-label="ایمیل"
+          placeholder={t('login.emailPlaceholder')}
+          aria-label={t('login.emailPlaceholder')}
           dir="ltr"
           required
           style={{
@@ -59,7 +56,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
           }}
         />
         <button className="btn" type="submit" disabled={busy || !email.trim()}>
-          فرستادن لینک ورود
+          {t('login.sendLink')}
         </button>
       </form>
 
@@ -68,10 +65,10 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
       {googleEnabled && (
         <>
           <div style={{ textAlign: 'center', color: 'var(--text-soft)', fontSize: '0.85rem' }}>
-            یا
+            {t('login.or')}
           </div>
           <a className="btn secondary" href="/api/auth/google">
-            ورود با گوگل
+            {t('login.google')}
           </a>
         </>
       )}

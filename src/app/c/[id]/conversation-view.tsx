@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useT } from '@/i18n/provider';
 import { LANGUAGES, RTL_LANGS, labelOf } from './languages';
 import { ownerTokenKey } from '@/lib/branch-token';
 
@@ -42,12 +43,13 @@ interface Props {
 }
 
 /** سیگنال‌های معرفتیِ صریح (ADR-0022، اصل ۳) — «اثر بر فهم»، نه محبوبیت. */
-const SIGNALS: { kind: string; label: string }[] = [
-  { kind: 'understood-more', label: 'فهمم را بیشتر کرد' },
-  { kind: 'thought-more', label: 'باعث شد بیشتر فکر کنم' },
-];
+const SIGNALS = [
+  { kind: 'understood-more', key: 'signal.understoodMore' },
+  { kind: 'thought-more', key: 'signal.thoughtMore' },
+] as const;
 
 export function ConversationView(props: Props) {
+  const { t } = useT();
   const [lang, setLang] = useState(props.initialTranslation?.lang ?? '');
   const [translated, setTranslated] = useState<Translation | null>(
     props.initialTranslation ?? null,
@@ -94,11 +96,11 @@ export function ConversationView(props: Props) {
         body: JSON.stringify({ parentId: props.id, branchPoint: point }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error?.message ?? 'شاخه‌زدن ممکن نشد.');
+      if (!res.ok) throw new Error(data?.error?.message ?? t('conv.branchError'));
       localStorage.setItem(ownerTokenKey(data.id), data.ownerToken);
       router.push(`/continue/${data.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'شاخه‌زدن ممکن نشد.');
+      setError(e instanceof Error ? e.message : t('conv.branchError'));
       setBranching(false);
     }
   }
@@ -124,11 +126,11 @@ export function ConversationView(props: Props) {
       );
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data?.error?.message ?? 'ترجمه در دسترس نیست.');
+        throw new Error(data?.error?.message ?? t('conv.translateError'));
       }
       setTranslated(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'ترجمه در دسترس نیست.');
+      setError(e instanceof Error ? e.message : t('conv.translateError'));
       setLang('');
     } finally {
       setTranslating(false);
@@ -147,17 +149,17 @@ export function ConversationView(props: Props) {
       const data = await response.json().catch(() => ({}));
       if (response.status === 409) {
         setSent((s) => new Set(s).add(kind));
-        setSignal('این نشانه را پیش‌تر ثبت کرده‌ای.');
+        setSignal(t('conv.signalDuplicate'));
         return;
       }
       if (!response.ok) {
-        throw new Error(data?.error?.message ?? 'ثبت نشد.');
+        throw new Error(data?.error?.message ?? t('conv.signalError'));
       }
       setCounts((c) => ({ ...c, [kind]: (c[kind] ?? 0) + 1 }));
       setSent((s) => new Set(s).add(kind));
-      setSignal('ثبت شد. سپاس.');
+      setSignal(t('conv.signalThanks'));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'ثبت نشد.');
+      setError(e instanceof Error ? e.message : t('conv.signalError'));
     }
   }
 
@@ -166,7 +168,7 @@ export function ConversationView(props: Props) {
       <h1 className="page-title">{title}</h1>
 
       <div className="lang-bar" dir="rtl">
-        <label htmlFor="lang">خواندن به زبان:</label>
+        <label htmlFor="lang">{t('conv.readIn')}</label>
         <select
           id="lang"
           value={lang}
@@ -179,20 +181,20 @@ export function ConversationView(props: Props) {
             </option>
           ))}
         </select>
-        {translating && <span>در حال ترجمه…</span>}
-        {active && <span>ترجمه‌ی ماشینی — متن اصلی معیار است.</span>}
+        {translating && <span>{t('conv.translating')}</span>}
+        {active && <span>{t('conv.machineNote')}</span>}
       </div>
 
       {showOffer && (
         <div className="notice" dir="rtl" style={{ marginTop: '0.8rem' }}>
-          این گفتگو را به {labelOf(props.preferredLang!)} بخوانی؟{' '}
+          {t('conv.offer', { lang: labelOf(props.preferredLang!) })}{' '}
           <button
             className="btn secondary"
             style={{ minHeight: 'auto', padding: '0.2rem 0.9rem', marginInlineStart: '0.5rem' }}
             onClick={() => void changeLanguage(props.preferredLang!)}
             disabled={translating}
           >
-            ترجمه کن
+            {t('conv.translate')}
           </button>
         </div>
       )}
@@ -205,8 +207,8 @@ export function ConversationView(props: Props) {
 
       {props.parentId && (
         <div className="notice" dir="rtl" style={{ marginBottom: '1.2rem' }}>
-          این گفتگو از گفتگوی دیگری شاخه خورده است.{' '}
-          <Link href={`/c/${props.parentId}`}>دیدن گفتگوی اصلی</Link>
+          {t('branch.fromParent')}{' '}
+          <Link href={`/c/${props.parentId}`}>{t('branch.viewParent')}</Link>
         </div>
       )}
 
@@ -214,11 +216,11 @@ export function ConversationView(props: Props) {
         {messages.map((m, i) => (
           <div key={i}>
             <div className={`msg ${m.role}`}>
-              <div className="who">{m.role === 'seeker' ? 'جوینده' : 'مناد'}</div>
+              <div className="who">{m.role === 'seeker' ? t('conv.seeker') : t('conv.monad')}</div>
               {m.content}
               {!active && m.originalContent && (
                 <details>
-                  <summary>متن اصلی پیش از ویرایش نگارشی</summary>
+                  <summary>{t('conv.original')}</summary>
                   <div style={{ whiteSpace: 'pre-wrap', marginTop: '0.4rem' }}>
                     {m.originalContent}
                   </div>
@@ -228,10 +230,10 @@ export function ConversationView(props: Props) {
                 <div className="layers">
                   {(
                     [
-                      { layer: 'reasoning' as const, label: 'استدلال — چگونه به این رسیدم' },
-                      { layer: 'quranic' as const, label: 'مبنای قرآنی' },
+                      { layer: 'reasoning' as const, key: 'layer.reasoning' as const },
+                      { layer: 'quranic' as const, key: 'layer.quranic' as const },
                     ]
-                  ).map(({ layer, label }) => {
+                  ).map(({ layer, key: labelKey }) => {
                     const key = `${i + 1}:${layer}`;
                     return (
                       <details
@@ -241,12 +243,12 @@ export function ConversationView(props: Props) {
                           if (e.currentTarget.open) void loadLayer(i + 1, layer);
                         }}
                       >
-                        <summary>{label}</summary>
+                        <summary>{t(labelKey)}</summary>
                         <div className="body">
                           {layers[key] ??
                             (layerState[key] === 'error'
-                              ? 'اکنون در دسترس نیست. بعداً تلاش کن.'
-                              : 'در حال آماده‌سازی…')}
+                              ? t('layer.error')
+                              : t('layer.loading'))}
                         </div>
                       </details>
                     );
@@ -261,7 +263,7 @@ export function ConversationView(props: Props) {
                   onClick={() => void branchFrom(i + 1)}
                   disabled={branching}
                 >
-                  <span className="arrow">↳</span> این مسیر را ادامه بده
+                  <span className="arrow">↳</span> {t('branch.continue')}
                 </button>
               </div>
             )}
@@ -270,7 +272,7 @@ export function ConversationView(props: Props) {
       </div>
 
       <div className="signal-bar" dir="rtl">
-        <p className="signal-q">این گفتگو چه اثری بر فهمِ تو داشت؟</p>
+        <p className="signal-q">{t('conv.signalQ')}</p>
         <div className="signal-chips">
           {SIGNALS.map((s) => (
             <button
@@ -280,28 +282,26 @@ export function ConversationView(props: Props) {
               onClick={() => void sendSignal(s.kind)}
               disabled={sent.has(s.kind)}
             >
-              {s.label}
+              {t(s.key)}
               {(counts[s.kind] ?? 0) > 0 ? ` (${counts[s.kind]})` : ''}
             </button>
           ))}
         </div>
-        <p className="signal-note">
-          {signal ??
-            'پاسخِ تو تنها به سنجشِ اثرِ گفتگو بر فهم کمک می‌کند؛ نه رأیِ منفی هست، نه نشانه‌ی محبوبیت.'}
-        </p>
+        <p className="signal-note">{signal ?? t('conv.signalNote')}</p>
       </div>
 
       {props.branches.length > 0 && (
         <div className="branches" dir="rtl">
-          <h3>شاخه‌ها ({props.branches.length})</h3>
-          <p className="note">
-            مسیرهایی که جویندگان از همین گفتگو ادامه داده‌اند — برای رسیدن به غنی‌ترین فهم.
-          </p>
+          <h3>{t('branches.title', { count: props.branches.length })}</h3>
+          <p className="note">{t('branches.note')}</p>
           <div className="branch-list">
             {props.branches.map((b) => (
               <Link key={b.id} href={`/c/${b.id}`} className="branch-card">
                 <div className="lead">
-                  شاخه از نوبتِ {Math.ceil(b.branchPoint / 2)} · {b.turns} پرسش
+                  {t('branches.fromTurn', {
+                    turn: Math.ceil(b.branchPoint / 2),
+                    count: b.turns,
+                  })}
                 </div>
                 {b.title}
               </Link>

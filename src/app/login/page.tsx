@@ -1,25 +1,27 @@
-import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { getContainer } from '@/infrastructure/container';
 import { currentUserServer } from '@/lib/auth';
+import { currentLocale } from '@/lib/locale';
+import { t } from '@/i18n/t';
 import { LoginForm } from './login-form';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'ورود' };
 
 export default async function LoginPage() {
   const user = await currentUserServer();
   if (user) redirect('/profile');
-  const googleEnabled = getContainer().google !== null;
+  const [locale, google] = await Promise.all([
+    currentLocale(),
+    Promise.resolve(getContainer().google),
+  ]);
 
   return (
     <>
-      <h1 className="page-title">ورود به مناد</h1>
+      <h1 className="page-title">{t(locale, 'login.title')}</h1>
       <p style={{ color: 'var(--text-soft)', marginBottom: '1.25rem' }}>
-        ورود اختیاری است. مناد بدون ورود هم کامل کار می‌کند؛ ورود فقط برای داشتن نام و
-        بایگانیِ خصوصیِ گفتگوهایت است.
+        {t(locale, 'login.disclaimer')}
       </p>
-      <LoginForm googleEnabled={googleEnabled} />
+      <LoginForm googleEnabled={google !== null} />
     </>
   );
 }

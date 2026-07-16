@@ -29,6 +29,10 @@
 
   "new.title": "گفتگوی تازه",
   "new.intro": "پرسشت را بنویس — به هر زبانی که با آن می‌اندیشی. مناد عجله ندارد.",
+  "continue.title": "ادامه‌ی این مسیر",
+  "continue.loading": "در حال بارگذاری…",
+  "continue.loadError": "بارگذاری نشد.",
+  "continue.unavailable": "این مسیر برای تو در دسترس نیست. از صفحه‌ی گفتگو دوباره «این مسیر را ادامه بده» را بزن.",
   "chat.you": "تو",
   "chat.monad": "مناد",
   "chat.thinking": "در حال اندیشیدن…",
@@ -85,6 +89,9 @@
 
   "conv.seeker": "جوینده",
   "conv.monad": "مناد",
+  "conv.readIn": "خواندن به زبان:",
+  "conv.offer": "این گفتگو را به {lang} بخوانی؟",
+  "conv.translate": "ترجمه کن",
   "conv.original": "متن اصلی پیش از ویرایش نگارشی",
   "conv.machineNote": "ترجمه‌ی ماشینی — متن اصلی معیار است.",
   "conv.showOriginal": "متن اصلی",
@@ -114,6 +121,8 @@
   "branch.inheritedNote": "این بخش از گفتگوی اصلی به ارث رسیده است؛ از این‌جا مسیر را به سمتِ پرسش‌های خودت ادامه بده.",
   "branches.title": "شاخه‌ها ({count})",
   "branches.note": "مسیرهایی که جویندگان از همین گفتگو ادامه داده‌اند — برای رسیدن به غنی‌ترین فهم.",
+  "branches.fromTurn": "شاخه از نوبتِ {turn} · {count} پرسش",
+  "conv.branchError": "شاخه‌زدن ممکن نشد.",
   "branch.fromParent": "این گفتگو از گفتگوی دیگری شاخه خورده است.",
   "branch.viewParent": "دیدن گفتگوی اصلی",
 

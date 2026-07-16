@@ -4,9 +4,11 @@ import { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ChatSession, type ChatInitial } from '../../_components/chat-session';
 import { ownerTokenKey } from '@/lib/branch-token';
+import { useT } from '@/i18n/provider';
 
 export default function ContinuePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const { t } = useT();
   const [initial, setInitial] = useState<ChatInitial | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,7 +16,7 @@ export default function ContinuePage({ params }: { params: Promise<{ id: string 
     const ownerToken =
       typeof window !== 'undefined' ? localStorage.getItem(ownerTokenKey(id)) : null;
     if (!ownerToken) {
-      setError('این مسیر برای تو در دسترس نیست. از صفحه‌ی گفتگو دوباره «این مسیر را ادامه بده» را بزن.');
+      setError(t('continue.unavailable'));
       return;
     }
     (async () => {
@@ -25,7 +27,7 @@ export default function ContinuePage({ params }: { params: Promise<{ id: string 
           body: JSON.stringify({ ownerToken }),
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data?.error?.message ?? 'بارگذاری نشد.');
+        if (!res.ok) throw new Error(data?.error?.message ?? t('continue.loadError'));
         setInitial({
           id,
           ownerToken,
@@ -33,24 +35,24 @@ export default function ContinuePage({ params }: { params: Promise<{ id: string 
           inheritedCount: data.branchPoint ?? data.messages.length,
         });
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'بارگذاری نشد.');
+        setError(e instanceof Error ? e.message : t('continue.loadError'));
       }
     })();
-  }, [id]);
+  }, [id, t]);
 
   if (error) {
     return (
       <div className="notice error">
         <p>{error}</p>
         <p style={{ marginTop: '0.5rem' }}>
-          <Link href="/">بازگشت به گفتگوها</Link>
+          <Link href="/">{t('published.back')}</Link>
         </p>
       </div>
     );
   }
   if (!initial) {
-    return <p style={{ color: 'var(--text-soft)' }}>در حال بارگذاری…</p>;
+    return <p style={{ color: 'var(--text-soft)' }}>{t('continue.loading')}</p>;
   }
 
-  return <ChatSession title="ادامه‌ی این مسیر" initial={initial} />;
+  return <ChatSession titleKey="continue.title" initial={initial} />;
 }

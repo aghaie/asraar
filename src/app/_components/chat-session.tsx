@@ -2,6 +2,8 @@
 
 import { useCallback, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useT } from '@/i18n/provider';
+import type { MessageKey } from '@/i18n/t';
 
 export interface ChatMessage {
   role: 'seeker' | 'monad';
@@ -37,14 +39,15 @@ async function postJson(url: string, body: unknown): Promise<Record<string, unkn
 }
 
 export function ChatSession({
-  title,
-  intro,
+  titleKey,
+  introKey,
   initial,
 }: {
-  title: string;
-  intro?: string;
+  titleKey: MessageKey;
+  introKey?: MessageKey;
   initial?: ChatInitial;
 }) {
+  const { t } = useT();
   const [messages, setMessages] = useState<ChatMessage[]>(initial?.messages ?? []);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -159,11 +162,11 @@ export function ChatSession({
   if (phase === 'published') {
     return (
       <div className="notice">
-        <p>گفتگو منتشر شد. اکنون هر جوینده‌ای در جهان می‌تواند آن را بخواند.</p>
+        <p>{t('published.notice')}</p>
         <p style={{ marginTop: '0.5rem' }}>
-          <Link href={`/c/${conversationId}`}>دیدن گفتگوی منتشرشده</Link>
+          <Link href={`/c/${conversationId}`}>{t('published.view')}</Link>
           {' · '}
-          <Link href="/">بازگشت به گفتگوها</Link>
+          <Link href="/">{t('published.back')}</Link>
         </p>
       </div>
     );
@@ -172,9 +175,9 @@ export function ChatSession({
   if (phase === 'private') {
     return (
       <div className="notice">
-        <p>گفتگو خصوصی ماند و برای دیگران نمایش داده نمی‌شود.</p>
+        <p>{t('private.notice')}</p>
         <p style={{ marginTop: '0.5rem' }}>
-          <Link href="/">بازگشت به گفتگوها</Link>
+          <Link href="/">{t('published.back')}</Link>
         </p>
       </div>
     );
@@ -185,14 +188,13 @@ export function ChatSession({
 
   return (
     <>
-      <h1 className="page-title">{title}</h1>
-      {messages.length === 0 && intro && (
-        <p style={{ color: 'var(--text-soft)' }}>{intro}</p>
+      <h1 className="page-title">{t(titleKey)}</h1>
+      {messages.length === 0 && introKey && (
+        <p style={{ color: 'var(--text-soft)' }}>{t(introKey)}</p>
       )}
       {inheritedCount > 0 && (
         <div className="notice" style={{ marginBottom: '1.2rem' }}>
-          این بخش از گفتگوی اصلی به ارث رسیده است؛ از این‌جا مسیر را به سمتِ پرسش‌های
-          خودت ادامه بده.
+          {t('branch.inheritedNote')}
         </div>
       )}
 
@@ -203,7 +205,7 @@ export function ChatSession({
             className={`msg ${m.role}`}
             style={i < inheritedCount ? { opacity: 0.72 } : undefined}
           >
-            <div className="who">{m.role === 'seeker' ? 'تو' : 'مناد'}</div>
+            <div className="who">{m.role === 'seeker' ? t('chat.you') : t('chat.monad')}</div>
             {m.content}
           </div>
         ))}
@@ -211,8 +213,8 @@ export function ChatSession({
           phase === 'chatting' &&
           messages[messages.length - 1]?.role !== 'monad' && (
             <div className="msg monad">
-              <div className="who">مناد</div>
-              در حال اندیشیدن…
+              <div className="who">{t('chat.monad')}</div>
+              {t('chat.thinking')}
             </div>
           )}
       </div>
@@ -230,17 +232,17 @@ export function ChatSession({
                 void send();
               }
             }}
-            placeholder="پرسش تو…"
-            aria-label="متن پرسش"
+            placeholder={t('chat.placeholder')}
+            aria-label={t('chat.inputAria')}
             disabled={busy}
           />
           <div className="actions">
             <button className="btn" onClick={() => void send()} disabled={busy || !input.trim()}>
-              بفرست
+              {t('chat.send')}
             </button>
             {hasOwnTurn && (
               <button className="btn quiet" onClick={() => setPhase('finishing')} disabled={busy}>
-                پایان گفتگو
+                {t('chat.finish')}
               </button>
             )}
           </div>
@@ -249,16 +251,16 @@ export function ChatSession({
 
       {phase === 'finishing' && (
         <div className="notice">
-          <p>این گفتگو منتشر شود تا دیگران هم بخوانند، یا خصوصی بماند؟</p>
+          <p>{t('finish.prompt')}</p>
           <div className="actions" style={{ marginTop: '0.8rem' }}>
             <button className="btn" onClick={() => void finish(true)} disabled={busy}>
-              منتشر شود
+              {t('finish.publish')}
             </button>
             <button className="btn secondary" onClick={() => void finish(false)} disabled={busy}>
-              خصوصی بماند
+              {t('finish.private')}
             </button>
             <button className="btn quiet" onClick={() => setPhase('chatting')} disabled={busy}>
-              ادامه‌ی گفتگو
+              {t('finish.continue')}
             </button>
           </div>
         </div>
