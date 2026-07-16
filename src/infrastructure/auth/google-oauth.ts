@@ -68,8 +68,14 @@ export async function exchangeGoogleCode(
   const info = (await infoRes.json()) as {
     sub?: string;
     email?: string;
+    email_verified?: boolean | string;
     name?: string;
   };
   if (!info.sub) throw new Error('google: no sub');
-  return { sub: info.sub, email: info.email ?? null, name: info.name ?? null };
+
+  // ایمیل فقط در صورت تأییدشدن توسط گوگل قابل اعتماد است. وگرنه null می‌شود تا
+  // پیوند به حسابِ موجود با همان ایمیل رخ ندهد (جلوگیری از تصاحب حساب).
+  const verified = info.email_verified === true || info.email_verified === 'true';
+  const email = info.email && verified ? info.email : null;
+  return { sub: info.sub, email, name: info.name ?? null };
 }
