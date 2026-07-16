@@ -2,6 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { currentUserServer } from '@/lib/auth';
 import { currentLocale, isRtlLocale } from '@/lib/locale';
+import { t } from '@/i18n/t';
+import { dictionaryFor } from '@/i18n/t';
+import { I18nProvider } from '@/i18n/provider';
 import { LanguageSwitcher } from './_components/language-switcher';
 import './globals.css';
 
@@ -47,29 +50,29 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang={locale} dir={dir}>
       <body>
-        <header className="site-header">
-          <div className="inner">
-            <Link href="/" className="brand">
-              <BrandMark />
-              <span>مناد</span>
-              <span className="tagline">گفتگوی انسان با حقیقت</span>
-            </Link>
-            <nav className="nav">
-              <Link href="/new">گفتگوی تازه</Link>
-              <Link href="/gift">هدیه</Link>
-              {user ? (
-                <Link href="/profile">{user.displayName ?? 'پروفایل'}</Link>
-              ) : (
-                <Link href="/login">ورود</Link>
-              )}
-              <LanguageSwitcher locale={locale} />
-            </nav>
-          </div>
-        </header>
-        <main className="container">{children}</main>
-        <footer className="site-footer">
-          قهرمان این‌جا حقیقت است، نه ما. — مناد
-        </footer>
+        <I18nProvider locale={locale} messages={dictionaryFor(locale)}>
+          <header className="site-header">
+            <div className="inner">
+              <Link href="/" className="brand">
+                <BrandMark />
+                <span>{t(locale, 'brand')}</span>
+                <span className="tagline">{t(locale, 'tagline')}</span>
+              </Link>
+              <nav className="nav">
+                <Link href="/new">{t(locale, 'nav.new')}</Link>
+                <Link href="/gift">{t(locale, 'nav.gift')}</Link>
+                {user ? (
+                  <Link href="/profile">{user.displayName ?? t(locale, 'nav.profile')}</Link>
+                ) : (
+                  <Link href="/login">{t(locale, 'nav.login')}</Link>
+                )}
+                <LanguageSwitcher locale={locale} />
+              </nav>
+            </div>
+          </header>
+          <main className="container">{children}</main>
+          <footer className="site-footer">{t(locale, 'footer')}</footer>
+        </I18nProvider>
       </body>
     </html>
   );

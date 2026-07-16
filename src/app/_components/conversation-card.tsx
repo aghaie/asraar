@@ -1,21 +1,29 @@
 import Link from 'next/link';
 import type { PublishedSummary } from '@/core/domain/conversation';
-
-const dateFormat = new Intl.DateTimeFormat('fa-IR', { dateStyle: 'medium' });
+import { t } from '@/i18n/t';
 
 /** کارت یک گفتگوی منتشرشده — مشترک میان صفحه‌ی اصلی و جست‌وجو. */
-export function ConversationCard({ c }: { c: PublishedSummary }) {
+export function ConversationCard({ c, locale }: { c: PublishedSummary; locale: string }) {
+  const dateFormat = new Intl.DateTimeFormat(`${locale}`, { dateStyle: 'medium' });
   return (
     <Link href={`/c/${c.id}`} className="card">
       <h2>{c.title}</h2>
       <p>{c.excerpt}</p>
       <div className="meta">
-        <span>{c.turns} پرسش</span>
+        <span>{t(locale, 'card.turns', { turns: c.turns })}</span>
         {c.understoodCount > 0 && (
-          <span>فهمِ {c.understoodCount} نفر را عمیق‌تر کرد</span>
+          <span>{t(locale, 'card.understood', { count: c.understoodCount })}</span>
         )}
-        <span>{dateFormat.format(new Date(c.publishedAt))}</span>
+        <span>{formatDate(dateFormat, c.publishedAt)}</span>
       </div>
     </Link>
   );
+}
+
+function formatDate(fmt: Intl.DateTimeFormat, iso: string): string {
+  try {
+    return fmt.format(new Date(iso));
+  } catch {
+    return new Date(iso).toISOString().slice(0, 10);
+  }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '@/i18n/provider';
 import { LANGUAGES } from '../c/[id]/languages';
 
 const LTR_LABELS = new Set(['en', 'tr', 'id', 'fr', 'de', 'es']);
@@ -10,6 +11,7 @@ const LTR_LABELS = new Set(['en', 'tr', 'id', 'fr', 'de', 'es']);
  * انتخاب، کوکیِ monad_lang را می‌گذارد و صفحه را تازه می‌کند؛ زبان به‌خاطر سپرده می‌شود.
  */
 export function LanguageSwitcher({ locale }: { locale: string }) {
+  const { t } = useT();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -35,7 +37,7 @@ export function LanguageSwitcher({ locale }: { locale: string }) {
         className="lang-btn"
         aria-haspopup="true"
         aria-expanded={open}
-        aria-label="تغییر زبان"
+        aria-label={t('lang.label')}
         onClick={() => setOpen((o) => !o)}
       >
         <svg
@@ -50,7 +52,7 @@ export function LanguageSwitcher({ locale }: { locale: string }) {
           <circle cx={12} cy={12} r={9} />
           <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" />
         </svg>
-        <span>{current?.label ?? 'زبان'}</span>
+        <span>{current?.label ?? t('lang.label')}</span>
       </button>
       {open && (
         <div className="lang-menu" role="menu">
