@@ -21,6 +21,12 @@ import {
   type EpistemicSignalKind,
   type SignalCounts,
 } from '@/core/domain/epistemic-signal';
+import type { AnswerLayer } from '@/core/domain/answer-layer';
+import type {
+  AnswerLayerBuilder,
+  AnswerLayerStore,
+  LayerTurn,
+} from '@/core/ports/answer-layer';
 
 export class InMemoryConversationRepository implements ConversationRepository {
   private readonly store = new Map<string, Conversation>();
@@ -201,6 +207,28 @@ export class StubContentModerator implements ContentModerator {
   }
 }
 
+export class StubAnswerLayerBuilder implements AnswerLayerBuilder {
+  readonly name = 'stub-layer';
+  calls = 0;
+  async build(layer: AnswerLayer, _h: LayerTurn[], _a: string, lang: string): Promise<string> {
+    this.calls += 1;
+    return `[${lang}] ${layer}`;
+  }
+}
+
+export class InMemoryAnswerLayerStore implements AnswerLayerStore {
+  private readonly store = new Map<string, string>();
+  private key(c: string, seq: number, layer: string, lang: string) {
+    return `${c}:${seq}:${layer}:${lang}`;
+  }
+  find(c: string, seq: number, layer: AnswerLayer, lang: string): string | null {
+    return this.store.get(this.key(c, seq, layer, lang)) ?? null;
+  }
+  save(c: string, seq: number, layer: AnswerLayer, lang: string, content: string): void {
+    this.store.set(this.key(c, seq, layer, lang), content);
+  }
+}
+
 export class StubRateLimiter implements RateLimiter {
   used = new Map<string, number>();
 
@@ -269,6 +297,8 @@ export function testDeps() {
     engine: new StubEngine(),
     translator: new StubTranslator(),
     store: new InMemoryTranslationStore(),
+    builder: new StubAnswerLayerBuilder(),
+    layerStore: new InMemoryAnswerLayerStore(),
     newId: () => `id-${++counter}`,
     newToken: () => `token-${counter}`,
     now: () => new Date('2026-07-15T12:00:00Z'),

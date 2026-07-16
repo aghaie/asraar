@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import type { AnswerLayerBuilder, AnswerLayerStore } from '@/core/ports/answer-layer';
 import type { ContentModerator } from '@/core/ports/content-moderator';
 import type { ConversationRepository } from '@/core/ports/conversation-repository';
 import type { EmailSender } from '@/core/ports/email-sender';
@@ -6,6 +7,8 @@ import type { IdentityRepository } from '@/core/ports/identity-repository';
 import type { LlmEngine } from '@/core/ports/llm-engine';
 import type { RateLimiter } from '@/core/ports/rate-limiter';
 import type { TranslationStore, Translator } from '@/core/ports/translator';
+import { FakeAnswerLayerBuilder, LlmAnswerLayerBuilder } from './answer-layers/llm-answer-layer-builder';
+import { SqliteAnswerLayerStore } from './answer-layers/sqlite-answer-layer-store';
 import { googleConfigFromEnv, type GoogleConfig } from './auth/google-oauth';
 import { openDatabase } from './db/database';
 import { ConsoleEmailSender } from './email/console-email-sender';
@@ -31,6 +34,8 @@ export interface Container {
   engine: LlmEngine;
   translator: Translator;
   contentModerator: ContentModerator;
+  answerLayerBuilder: AnswerLayerBuilder;
+  answerLayerStore: AnswerLayerStore;
   translationStore: TranslationStore;
   rateLimiter: RateLimiter;
   newId: () => string;
@@ -71,6 +76,7 @@ function selectEngine(): {
   engine: LlmEngine;
   translator: Translator;
   contentModerator: ContentModerator;
+  answerLayerBuilder: AnswerLayerBuilder;
 } {
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY;
@@ -99,6 +105,15 @@ function selectEngine(): {
           messages: [{ role: 'user', content: user }],
         }),
       ),
+      answerLayerBuilder: new LlmAnswerLayerBuilder('anthropic-layer', (system, user) =>
+        anthropicComplete({
+          apiKey: anthropicKey,
+          model,
+          system,
+          maxTokens: 1200,
+          messages: [{ role: 'user', content: user }],
+        }),
+      ),
     };
   }
   if (provider === 'openai' && openaiKey) {
@@ -115,19 +130,29 @@ function selectEngine(): {
           messages: [{ role: 'user', content: user }],
         }),
       ),
+      answerLayerBuilder: new LlmAnswerLayerBuilder('openai-layer', (system, user) =>
+        openAiComplete({
+          apiKey: openaiKey,
+          model,
+          system,
+          maxTokens: 4000,
+          messages: [{ role: 'user', content: user }],
+        }),
+      ),
     };
   }
   return {
     engine: new FakeEngine(),
     translator: new FakeTranslator(),
     contentModerator: new FakeContentModerator(),
+    answerLayerBuilder: new FakeAnswerLayerBuilder(),
   };
 }
 
 function build(): Container {
   const db = openDatabase(process.env.MONAD_DB_PATH ?? './data/monad.db');
 
-  const { engine, translator, contentModerator } = selectEngine();
+  const { engine, translator, contentModerator, answerLayerBuilder } = selectEngine();
   const email = selectEmailSender();
   const google = googleConfigFromEnv();
 
@@ -149,6 +174,8 @@ function build(): Container {
     engine,
     translator,
     contentModerator,
+    answerLayerBuilder,
+    answerLayerStore: new SqliteAnswerLayerStore(db),
     translationStore: new SqliteTranslationStore(db),
     rateLimiter: new SqliteRateLimiter(db, {
       conversation: intFromEnv('MONAD_DAILY_CONVERSATIONS', 10),

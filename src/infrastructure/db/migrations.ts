@@ -137,4 +137,21 @@ export const MIGRATIONS: Migration[] = [
       CREATE INDEX idx_conversations_parent ON conversations(parent_id);
     `,
   },
+  {
+    version: 7,
+    name: 'answer_layers',
+    sql: `
+      -- لایه‌های درخواستیِ پاسخ (ADR-0022، اصل ۴): استدلال و مبنای قرآنی.
+      -- تنبل تولید و برای هر (گفتگو، نوبت، لایه، زبان) یک بار کش می‌شوند (اصل ۸).
+      CREATE TABLE answer_layers (
+        conversation_id TEXT NOT NULL,
+        seq INTEGER NOT NULL,
+        layer TEXT NOT NULL,
+        lang TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        PRIMARY KEY (conversation_id, seq, layer, lang)
+      );
+    `,
+  },
 ];

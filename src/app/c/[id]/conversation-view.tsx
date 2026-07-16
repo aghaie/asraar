@@ -58,7 +58,29 @@ export function ConversationView(props: Props) {
   const [counts, setCounts] = useState<Record<string, number>>(props.signalCounts);
   const [sent, setSent] = useState<Set<string>>(new Set());
   const [branching, setBranching] = useState(false);
+  const [layers, setLayers] = useState<Record<string, string>>({});
+  const [layerState, setLayerState] = useState<Record<string, 'loading' | 'error'>>({});
   const router = useRouter();
+
+  /** بارگذاری تنبلِ یک لایه‌ی پاسخ (استدلال/مبنای قرآنی) هنگام باز شدن. */
+  async function loadLayer(seq: number, layer: 'reasoning' | 'quranic') {
+    const key = `${seq}:${layer}`;
+    if (layers[key] || layerState[key] === 'loading') return;
+    setLayerState((s) => ({ ...s, [key]: 'loading' }));
+    try {
+      const res = await fetch(`/api/conversations/${props.id}/layer?seq=${seq}&layer=${layer}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error?.message ?? 'اکنون در دسترس نیست.');
+      setLayers((l) => ({ ...l, [key]: data.content as string }));
+      setLayerState((s) => {
+        const next = { ...s };
+        delete next[key];
+        return next;
+      });
+    } catch {
+      setLayerState((s) => ({ ...s, [key]: 'error' }));
+    }
+  }
 
   /** شاخه‌زدن از این نقطه: پیشوندِ [۱..point] به‌ارث می‌رسد و ادامه به کاربر می‌رسد. */
   async function branchFrom(point: number) {
@@ -201,6 +223,35 @@ export function ConversationView(props: Props) {
                     {m.originalContent}
                   </div>
                 </details>
+              )}
+              {m.role === 'monad' && (
+                <div className="layers">
+                  {(
+                    [
+                      { layer: 'reasoning' as const, label: 'استدلال — چگونه به این رسیدم' },
+                      { layer: 'quranic' as const, label: 'مبنای قرآنی' },
+                    ]
+                  ).map(({ layer, label }) => {
+                    const key = `${i + 1}:${layer}`;
+                    return (
+                      <details
+                        key={layer}
+                        className="layer"
+                        onToggle={(e) => {
+                          if (e.currentTarget.open) void loadLayer(i + 1, layer);
+                        }}
+                      >
+                        <summary>{label}</summary>
+                        <div className="body">
+                          {layers[key] ??
+                            (layerState[key] === 'error'
+                              ? 'اکنون در دسترس نیست. بعداً تلاش کن.'
+                              : 'در حال آماده‌سازی…')}
+                        </div>
+                      </details>
+                    );
+                  })}
+                </div>
               )}
             </div>
             {m.role === 'monad' && (
