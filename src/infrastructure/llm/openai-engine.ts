@@ -57,7 +57,9 @@ export class OpenAiTranslator implements Translator {
       apiKey: this.apiKey,
       model: this.model,
       system: TRANSLATOR_SYSTEM_PROMPT,
-      maxTokens: 8000,
+      // سرِ ریزِ سخاوتمند: مدل‌های استدلالی (gpt-5) ممکن است هزاران توکنِ reasoning
+      // مصرف کنند؛ با سقفِ کم، خروجیِ JSON ناقص می‌ماند و parse می‌شکند.
+      maxTokens: 24000,
       messages: [{ role: 'user', content: JSON.stringify({ targetLanguage, texts }) }],
     });
     return parseTranslatedArray(raw, texts.length);

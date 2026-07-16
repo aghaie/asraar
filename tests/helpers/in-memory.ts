@@ -276,7 +276,7 @@ export class InMemoryTranslationStore implements TranslationStore {
     return this.store.get(`${conversationId}:${lang}`) ?? null;
   }
 
-  save(conversationId: string, translation: TranslatedConversation): void {
+  save(conversationId: string, translation: TranslatedConversation, _at?: string): void {
     this.store.set(`${conversationId}:${translation.lang}`, translation);
   }
 }

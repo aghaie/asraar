@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { listPublishedConversations } from '@/core/usecases/list-published-conversations';
 import type { TimeWindow } from '@/core/domain/time-window';
 import { getContainer } from '@/infrastructure/container';
+import { currentLocale } from '@/lib/locale';
 import { ConversationCard } from './conversation-card';
 
 /** مسیرِ تمیزِ هر بازه؛ «همه» روی صفحه‌ی اصلی (/) است. */
@@ -19,9 +20,13 @@ const TABS: { window: TimeWindow; label: string }[] = [
 ];
 
 /** بدنه‌ی صفحه‌ی «گفتگوهای ارزشمند» برای یک بازه‌ی زمانی مشخص. */
-export function ValuableConversations({ window }: { window: TimeWindow }) {
-  const { repo, now } = getContainer();
-  const conversations = listPublishedConversations({ repo, now }, { window });
+export async function ValuableConversations({ window }: { window: TimeWindow }) {
+  const { repo, now, translationStore } = getContainer();
+  const locale = await currentLocale();
+  const conversations = listPublishedConversations(
+    { repo, now, translationStore },
+    { window, locale },
+  );
 
   return (
     <>

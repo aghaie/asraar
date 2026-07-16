@@ -82,6 +82,15 @@ export function deriveTitle(firstQuestion: string): string {
 
 export function excerptOf(c: Conversation, maxChars = 220): string {
   const firstMonad = c.messages.find((m) => m.role === 'monad');
+  return excerptFromMessages(firstMonad ? [firstMonad] : [], maxChars);
+}
+
+/** گزیده از نخستین پاسخِ مناد در یک آرایه‌ی پیام (برای نسخه‌ی ترجمه‌شده هم). */
+export function excerptFromMessages(
+  messages: { role: MessageRole; content: string }[],
+  maxChars = 220,
+): string {
+  const firstMonad = messages.find((m) => m.role === 'monad');
   const text = (firstMonad?.content ?? '').replace(/\s+/g, ' ').trim();
   if (text.length <= maxChars) return text;
   return text.slice(0, maxChars - 1).trimEnd() + '…';

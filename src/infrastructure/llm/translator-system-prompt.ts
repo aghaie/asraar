@@ -8,14 +8,27 @@ Rules:
 
 /** پاسخ خام مدل را به آرایه‌ی ترجمه‌ها تبدیل و اعتبارسنجی می‌کند. */
 export function parseTranslatedArray(raw: string, expectedLength: number): string[] {
-  const jsonText = raw.trim().replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
-  const parsed = JSON.parse(jsonText) as unknown;
-  if (
-    !Array.isArray(parsed) ||
-    parsed.length !== expectedLength ||
-    !parsed.every((t) => typeof t === 'string')
-  ) {
-    throw new Error('translator returned malformed output');
+  let jsonText = raw.trim().replace(/^```(?:json)?\s*/, '').replace(/\s*```$/, '');
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(jsonText);
+  } catch {
+    // بردباری در برابر متنِ اضافه پیش/پس از آرایه: نخستین آرایه‌ی JSON را استخراج کن.
+    const start = jsonText.indexOf('[');
+    const end = jsonText.lastIndexOf(']');
+    if (start === -1 || end <= start) {
+      throw new Error(`translator returned non-JSON (len=${raw.length})`);
+    }
+    jsonText = jsonText.slice(start, end + 1);
+    parsed = JSON.parse(jsonText);
   }
-  return parsed;
+  if (!Array.isArray(parsed) || !parsed.every((t) => typeof t === 'string')) {
+    throw new Error('translator returned a non-string array');
+  }
+  if (parsed.length !== expectedLength) {
+    throw new Error(
+      `translator length mismatch: got ${parsed.length}, expected ${expectedLength}`,
+    );
+  }
+  return parsed as string[];
 }

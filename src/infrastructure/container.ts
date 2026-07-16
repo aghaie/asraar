@@ -135,7 +135,8 @@ function selectEngine(): {
           apiKey: openaiKey,
           model,
           system,
-          maxTokens: 4000,
+          // سرِ ریزِ استدلالِ gpt-5؛ وگرنه لایه‌ی بلند قطع می‌شود.
+          maxTokens: 12000,
           messages: [{ role: 'user', content: user }],
         }),
       ),

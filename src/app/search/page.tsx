@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { searchPublishedConversations } from '@/core/usecases/search-published-conversations';
 import { getContainer } from '@/infrastructure/container';
+import { currentLocale } from '@/lib/locale';
 import { ConversationCard } from '../_components/conversation-card';
 
 export const dynamic = 'force-dynamic';
@@ -16,8 +17,11 @@ export default async function SearchPage({
   const { q } = await searchParams;
   const query = (q ?? '').trim();
 
-  const { repo } = getContainer();
-  const results = query ? searchPublishedConversations({ repo }, query) : [];
+  const { repo, translationStore } = getContainer();
+  const locale = await currentLocale();
+  const results = query
+    ? searchPublishedConversations({ repo, translationStore }, query, 50, locale)
+    : [];
 
   return (
     <>
