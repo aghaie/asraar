@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { currentUserServer } from '@/lib/auth';
+import { currentLocale, isRtlLocale } from '@/lib/locale';
+import { LanguageSwitcher } from './_components/language-switcher';
 import './globals.css';
 
 export const dynamic = 'force-dynamic';
@@ -39,10 +41,11 @@ function BrandMark() {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const user = await currentUserServer();
+  const [user, locale] = await Promise.all([currentUserServer(), currentLocale()]);
+  const dir = isRtlLocale(locale) ? 'rtl' : 'ltr';
 
   return (
-    <html lang="fa" dir="rtl">
+    <html lang={locale} dir={dir}>
       <body>
         <header className="site-header">
           <div className="inner">
@@ -59,6 +62,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               ) : (
                 <Link href="/login">ورود</Link>
               )}
+              <LanguageSwitcher locale={locale} />
             </nav>
           </div>
         </header>

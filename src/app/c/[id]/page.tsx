@@ -1,10 +1,8 @@
-import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { detectTextLanguage } from '@/core/domain/detect-language';
 import { getContainer } from '@/infrastructure/container';
-import { preferredLanguageFrom } from '@/lib/http';
+import { currentLocale } from '@/lib/locale';
 import { ConversationView } from './conversation-view';
-import { SUPPORTED_LANGS } from './languages';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,13 +20,12 @@ export default async function ConversationPage({
   const counts = repo.signalCounts(id);
   const branches = repo.listBranches(id);
 
-  // زبان مرجّح خواننده و زبان اصلی گفتگو
-  const acceptLang = (await headers()).get('accept-language');
-  const readerLang = preferredLanguageFrom(acceptLang, SUPPORTED_LANGS);
+  // زبانِ کاربر (کوکی → مرورگر → fa) و زبانِ اصلیِ گفتگو
+  const readerLang = await currentLocale();
   const firstSeeker = conversation.messages.find((m) => m.role === 'seeker');
   const originalLang = detectTextLanguage(firstSeeker?.content ?? conversation.title ?? '');
 
-  // فقط اگر زبان خواننده متفاوت است، ببینیم ترجمه‌ی کش‌شده هست یا نه (بدون مصرف سهمیه).
+  // فقط اگر زبانِ کاربر متفاوت است، ببینیم ترجمه‌ی کش‌شده هست یا نه (بدون مصرف سهمیه).
   const wantsOther = readerLang !== '' && readerLang !== originalLang;
   const cached = wantsOther ? translationStore.find(id, readerLang) : null;
 
