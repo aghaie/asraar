@@ -88,7 +88,7 @@ describe('sendMessage', () => {
       content: 'پرسش',
       clientKey: 'client-1',
     });
-    finishConversation(deps, { conversationId: id, ownerToken, publish: false });
+    await finishConversation(deps, { conversationId: id, ownerToken, publish: false });
     await expect(
       sendMessage(deps, {
         conversationId: id,
@@ -146,7 +146,7 @@ describe('finishConversation', () => {
       content: 'من می خواهم حقیقت را بدانم',
       clientKey: 'client-1',
     });
-    const result = finishConversation(deps, { conversationId: id, ownerToken, publish: true });
+    const result = await finishConversation(deps, { conversationId: id, ownerToken, publish: true });
     expect(result.status).toBe('published');
 
     const published = deps.repo.findById(id)!;
@@ -156,13 +156,12 @@ describe('finishConversation', () => {
     expect(published.publishedAt).toBeTruthy();
   });
 
-  it('گفتگوی خالی را نمی‌بندد', () => {
+  it('گفتگوی خالی را نمی‌بندد', async () => {
     const deps = testDeps();
     const { id, ownerToken } = startConversation(deps, 'client-1');
-    expectDomainError(
-      () => finishConversation(deps, { conversationId: id, ownerToken, publish: true }),
-      'VALIDATION',
-    );
+    await expect(
+      finishConversation(deps, { conversationId: id, ownerToken, publish: true }),
+    ).rejects.toMatchObject({ code: 'VALIDATION' });
   });
 
   it('خصوصی ماندن، گفتگو را از فهرست عمومی بیرون نگه می‌دارد', async () => {
@@ -174,7 +173,7 @@ describe('finishConversation', () => {
       content: 'پرسش خصوصی',
       clientKey: 'client-1',
     });
-    finishConversation(deps, { conversationId: id, ownerToken, publish: false });
+    await finishConversation(deps, { conversationId: id, ownerToken, publish: false });
     expect(listPublishedConversations(deps)).toHaveLength(0);
   });
 });
@@ -188,7 +187,7 @@ describe('recordValueSignal', () => {
       content: 'پرسش',
       clientKey: 'author',
     });
-    finishConversation(deps, { conversationId: id, ownerToken, publish: true });
+    await finishConversation(deps, { conversationId: id, ownerToken, publish: true });
     return id;
   }
 
@@ -216,7 +215,7 @@ describe('getTranslatedConversation', () => {
       content: 'حقیقت چیست؟',
       clientKey: 'author',
     });
-    finishConversation(deps, { conversationId: id, ownerToken, publish: true });
+    await finishConversation(deps, { conversationId: id, ownerToken, publish: true });
     return id;
   }
 

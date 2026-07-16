@@ -15,6 +15,7 @@ import type {
 } from '@/core/ports/translator';
 import type { OwnedConversationSummary, Session, User } from '@/core/domain/user';
 import type { IdentityRepository } from '@/core/ports/identity-repository';
+import type { ContentModerator, ModerationResult } from '@/core/ports/content-moderator';
 
 export class InMemoryConversationRepository implements ConversationRepository {
   private readonly store = new Map<string, Conversation>();
@@ -168,6 +169,14 @@ export class InMemoryIdentityRepository implements IdentityRepository {
   }
 }
 
+export class StubContentModerator implements ContentModerator {
+  readonly name = 'stub-moderator';
+  constructor(private readonly verdict: ModerationResult = { allow: true, reason: null }) {}
+  async moderate(): Promise<ModerationResult> {
+    return this.verdict;
+  }
+}
+
 export class StubRateLimiter implements RateLimiter {
   used = new Map<string, number>();
 
@@ -226,6 +235,7 @@ export function testDeps() {
   return {
     repo: new InMemoryConversationRepository(),
     identity: new InMemoryIdentityRepository(),
+    contentModerator: new StubContentModerator(),
     rateLimiter: new StubRateLimiter({
       conversation: 2,
       message: 10,

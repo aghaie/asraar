@@ -44,6 +44,7 @@ const STATUS_BY_CODE: Record<DomainErrorCode, number> = {
   TURN_LIMIT: 409,
   DUPLICATE_SIGNAL: 409,
   ENGINE_FAILURE: 503,
+  CONTENT_REJECTED: 422,
 };
 
 export function errorResponse(error: unknown): Response {

@@ -139,7 +139,8 @@ export default function NewConversationPage() {
         setPhase(publish ? 'published' : 'private');
       } catch (e) {
         setError(e instanceof Error ? e.message : 'خطایی رخ داد.');
-        setPhase('chatting');
+        // در حالت پایان می‌مانیم تا کاربر بتواند گزینه‌ی «خصوصی بماند» را انتخاب کند.
+        setPhase('finishing');
       } finally {
         setBusy(false);
       }

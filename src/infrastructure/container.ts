@@ -1,4 +1,5 @@
 import crypto from 'node:crypto';
+import type { ContentModerator } from '@/core/ports/content-moderator';
 import type { ConversationRepository } from '@/core/ports/conversation-repository';
 import type { EmailSender } from '@/core/ports/email-sender';
 import type { IdentityRepository } from '@/core/ports/identity-repository';
@@ -11,8 +12,11 @@ import { ConsoleEmailSender } from './email/console-email-sender';
 import { SmtpEmailSender } from './email/smtp-email-sender';
 import { AnthropicEngine } from './llm/anthropic-engine';
 import { AnthropicTranslator, FakeTranslator } from './llm/anthropic-translator';
+import { anthropicComplete } from './llm/anthropic-client';
 import { FakeEngine } from './llm/fake-engine';
 import { OpenAiEngine, OpenAiTranslator } from './llm/openai-engine';
+import { openAiComplete } from './llm/openai-client';
+import { FakeContentModerator, LlmContentModerator } from './moderation/llm-content-moderator';
 import { SqliteRateLimiter } from './rate-limit/sqlite-rate-limiter';
 import { SqliteConversationRepository } from './repositories/sqlite-conversation-repository';
 import { SqliteIdentityRepository } from './repositories/sqlite-identity-repository';
@@ -26,6 +30,7 @@ export interface Container {
   google: GoogleConfig | null;
   engine: LlmEngine;
   translator: Translator;
+  contentModerator: ContentModerator;
   translationStore: TranslationStore;
   rateLimiter: RateLimiter;
   newId: () => string;
@@ -62,7 +67,11 @@ function intFromEnv(name: string, fallback: number): number {
  * انتخاب موتور: MONAD_ENGINE اگر صریح تنظیم شده باشد؛ وگرنه هر کلیدی که موجود است
  * (اولویت با Anthropic). بدون کلید → موتور آزمایشی.
  */
-function selectEngine(): { engine: LlmEngine; translator: Translator } {
+function selectEngine(): {
+  engine: LlmEngine;
+  translator: Translator;
+  contentModerator: ContentModerator;
+} {
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY;
   const forced = process.env.MONAD_ENGINE;
@@ -81,6 +90,15 @@ function selectEngine(): { engine: LlmEngine; translator: Translator } {
     return {
       engine: new AnthropicEngine(anthropicKey, model),
       translator: new AnthropicTranslator(anthropicKey, model),
+      contentModerator: new LlmContentModerator('anthropic-moderator', (system, user) =>
+        anthropicComplete({
+          apiKey: anthropicKey,
+          model,
+          system,
+          maxTokens: 200,
+          messages: [{ role: 'user', content: user }],
+        }),
+      ),
     };
   }
   if (provider === 'openai' && openaiKey) {
@@ -88,15 +106,28 @@ function selectEngine(): { engine: LlmEngine; translator: Translator } {
     return {
       engine: new OpenAiEngine(openaiKey, model),
       translator: new OpenAiTranslator(openaiKey, model),
+      contentModerator: new LlmContentModerator('openai-moderator', (system, user) =>
+        openAiComplete({
+          apiKey: openaiKey,
+          model,
+          system,
+          maxTokens: 2000,
+          messages: [{ role: 'user', content: user }],
+        }),
+      ),
     };
   }
-  return { engine: new FakeEngine(), translator: new FakeTranslator() };
+  return {
+    engine: new FakeEngine(),
+    translator: new FakeTranslator(),
+    contentModerator: new FakeContentModerator(),
+  };
 }
 
 function build(): Container {
   const db = openDatabase(process.env.MONAD_DB_PATH ?? './data/monad.db');
 
-  const { engine, translator } = selectEngine();
+  const { engine, translator, contentModerator } = selectEngine();
   const email = selectEmailSender();
   const google = googleConfigFromEnv();
 
@@ -117,6 +148,7 @@ function build(): Container {
     google,
     engine,
     translator,
+    contentModerator,
     translationStore: new SqliteTranslationStore(db),
     rateLimiter: new SqliteRateLimiter(db, {
       conversation: intFromEnv('MONAD_DAILY_CONVERSATIONS', 10),

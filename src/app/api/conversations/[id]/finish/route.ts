@@ -10,7 +10,7 @@ export async function POST(
     const { id } = await params;
     const body = await readJsonBody(request);
     const c = getContainer();
-    const result = finishConversation(c, {
+    const result = await finishConversation(c, {
       conversationId: id,
       ownerToken: requireString(body, 'ownerToken', 256),
       publish: requireBoolean(body, 'publish'),

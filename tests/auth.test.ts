@@ -141,7 +141,7 @@ describe('بایگانی خصوصی و claim', () => {
       content: 'پرسش',
       clientKey: 'ip-1',
     });
-    finishConversation(base, { conversationId: conv.id, ownerToken: conv.ownerToken, publish: false });
+    await finishConversation(base, { conversationId: conv.id, ownerToken: conv.ownerToken, publish: false });
 
     const mine = getMyConversations(base.repo, userId);
     expect(mine).toHaveLength(1);

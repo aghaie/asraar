@@ -1,10 +1,12 @@
 import { deriveTitle, type Message } from '../domain/conversation';
 import { DomainError, forbidden, notFound } from '../domain/errors';
 import { normalizeForPublication, normalizePersian } from '../domain/normalize';
+import type { ContentModerator } from '../ports/content-moderator';
 import type { ConversationRepository } from '../ports/conversation-repository';
 
 export interface FinishConversationDeps {
   repo: ConversationRepository;
+  contentModerator: ContentModerator;
   now: () => Date;
 }
 
@@ -18,11 +20,13 @@ export interface FinishConversationInput {
 /**
  * پایان گفتگو به انتخاب جوینده: انتشار یا خصوصی ماندن.
  * هنگام انتشار، متن‌ها نگارش‌شده و نسخه‌ی اصلیِ تغییر‌یافته‌ها حفظ می‌شود.
+ * پیش از انتشار عمومی، نوشته‌ی جوینده از نظر کرامتِ فضای عمومی سنجیده می‌شود
+ * (توهین/هرزگی/اسپم رد می‌شود؛ پرسشِ صادقانه — هرچند بی‌پرده — آزاد است).
  */
-export function finishConversation(
+export async function finishConversation(
   deps: FinishConversationDeps,
   input: FinishConversationInput,
-): { status: 'published' | 'private' } {
+): Promise<{ status: 'published' | 'private' }> {
   const conversation = deps.repo.findById(input.conversationId);
   if (!conversation) throw notFound('گفتگو');
   if (conversation.ownerToken !== input.ownerToken) throw forbidden();
@@ -36,6 +40,21 @@ export function finishConversation(
   if (!input.publish) {
     deps.repo.finish(conversation.id, 'private', null, null, null);
     return { status: 'private' };
+  }
+
+  // نگهبانِ کرامت: فقط نوشته‌ی جوینده سنجیده می‌شود، نه پاسخ مناد.
+  const seekerText = conversation.messages
+    .filter((m) => m.role === 'seeker')
+    .map((m) => m.content)
+    .join('\n');
+  const verdict = await deps.contentModerator.moderate(seekerText);
+  if (!verdict.allow) {
+    throw new DomainError(
+      'CONTENT_REJECTED',
+      verdict.reason
+        ? `این گفتگو برای انتشار عمومی مناسب نیست: ${verdict.reason} می‌توانی آن را خصوصی نگه داری.`
+        : 'این گفتگو برای انتشار عمومی مناسب نیست. می‌توانی آن را خصوصی نگه داری.',
+    );
   }
 
   const normalizedMessages: Message[] = conversation.messages.map((m) => {

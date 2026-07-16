@@ -8,7 +8,8 @@ export type DomainErrorCode =
   | 'CONVERSATION_CLOSED'
   | 'TURN_LIMIT'
   | 'DUPLICATE_SIGNAL'
-  | 'ENGINE_FAILURE';
+  | 'ENGINE_FAILURE'
+  | 'CONTENT_REJECTED';
 
 export class DomainError extends Error {
   constructor(
