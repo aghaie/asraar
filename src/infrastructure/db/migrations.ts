@@ -109,4 +109,21 @@ export const MIGRATIONS: Migration[] = [
       CREATE INDEX idx_conversations_user ON conversations(user_id);
     `,
   },
+  {
+    version: 5,
+    name: 'epistemic_signals',
+    sql: `
+      -- سیگنال‌های معرفتی (ADR-0022، اصل ۳): فقط «اثر بر فهم»، نه محبوبیت.
+      -- هیچ سیگنالِ منفی‌ای نیست. هر کنشگر برای هر واحدِ محتوا، هر نوع سیگنال را یک بار.
+      CREATE TABLE epistemic_signals (
+        content_type TEXT NOT NULL,
+        content_id TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        actor_key TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        PRIMARY KEY (content_type, content_id, kind, actor_key)
+      );
+      CREATE INDEX idx_signals_content ON epistemic_signals(content_type, content_id, kind);
+    `,
+  },
 ];

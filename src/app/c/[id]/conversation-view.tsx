@@ -19,14 +19,19 @@ interface Props {
   id: string;
   title: string;
   publishedAt: string;
-  valueUp: number;
-  valueDown: number;
+  signalCounts: Record<string, number>;
   messages: ViewMessage[];
   /** زبان مرجّح خواننده (اگر با زبان اصلی فرق داشته باشد) — برای پیشنهاد ترجمه */
   preferredLang?: string | null;
   /** ترجمه‌ی ازپیش‌کش‌شده به زبان خواننده (رایگان، بدون فراخوان تازه) */
   initialTranslation?: Translation | null;
 }
+
+/** سیگنال‌های معرفتیِ صریح (ADR-0022، اصل ۳) — «اثر بر فهم»، نه محبوبیت. */
+const SIGNALS: { kind: string; label: string }[] = [
+  { kind: 'understood-more', label: 'فهمم را بیشتر کرد' },
+  { kind: 'thought-more', label: 'باعث شد بیشتر فکر کنم' },
+];
 
 export function ConversationView(props: Props) {
   const [lang, setLang] = useState(props.initialTranslation?.lang ?? '');
@@ -36,7 +41,8 @@ export function ConversationView(props: Props) {
   const [translating, setTranslating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [signal, setSignal] = useState<string | null>(null);
-  const [counts, setCounts] = useState({ up: props.valueUp, down: props.valueDown });
+  const [counts, setCounts] = useState<Record<string, number>>(props.signalCounts);
+  const [sent, setSent] = useState<Set<string>>(new Set());
 
   // پیشنهاد ترجمه فقط وقتی زبان خواننده متفاوت است، هنوز اصل نمایش داده می‌شود، و کش نبود.
   const showOffer =
@@ -70,25 +76,26 @@ export function ConversationView(props: Props) {
     }
   }
 
-  async function sendSignal(valuable: boolean) {
+  async function sendSignal(kind: string) {
     setError(null);
+    if (sent.has(kind)) return;
     try {
-      const response = await fetch(`/api/conversations/${props.id}/value`, {
+      const response = await fetch(`/api/conversations/${props.id}/signal`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ valuable }),
+        body: JSON.stringify({ kind }),
       });
       const data = await response.json().catch(() => ({}));
       if (response.status === 409) {
-        setSignal('نظر شما پیش‌تر ثبت شده است.');
+        setSent((s) => new Set(s).add(kind));
+        setSignal('این نشانه را پیش‌تر ثبت کرده‌ای.');
         return;
       }
       if (!response.ok) {
         throw new Error(data?.error?.message ?? 'ثبت نشد.');
       }
-      setCounts((c) =>
-        valuable ? { ...c, up: c.up + 1 } : { ...c, down: c.down + 1 },
-      );
+      setCounts((c) => ({ ...c, [kind]: (c[kind] ?? 0) + 1 }));
+      setSent((s) => new Set(s).add(kind));
       setSignal('ثبت شد. سپاس.');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'ثبت نشد.');
@@ -155,13 +162,18 @@ export function ConversationView(props: Props) {
       </div>
 
       <div className="value-bar" dir="rtl">
-        <span>این گفتگو برایت ارزشمند بود؟</span>
-        <button className="btn secondary" onClick={() => void sendSignal(true)}>
-          ارزشمند بود ({counts.up})
-        </button>
-        <button className="btn quiet" onClick={() => void sendSignal(false)}>
-          نبود ({counts.down})
-        </button>
+        <span>این گفتگو چه اثری بر فهمِ تو داشت؟</span>
+        {SIGNALS.map((s) => (
+          <button
+            key={s.kind}
+            className="btn secondary"
+            onClick={() => void sendSignal(s.kind)}
+            disabled={sent.has(s.kind)}
+          >
+            {s.label}
+            {(counts[s.kind] ?? 0) > 0 ? ` (${counts[s.kind]})` : ''}
+          </button>
+        ))}
         {signal && <span>{signal}</span>}
       </div>
     </article>

@@ -11,7 +11,9 @@ export function ConversationCard({ c }: { c: PublishedSummary }) {
       <p>{c.excerpt}</p>
       <div className="meta">
         <span>{c.turns} پرسش</span>
-        <span>{c.valueUp} نفر گفتند ارزشمند بود</span>
+        {c.understoodCount > 0 && (
+          <span>فهمِ {c.understoodCount} نفر را عمیق‌تر کرد</span>
+        )}
         <span>{dateFormat.format(new Date(c.publishedAt))}</span>
       </div>
     </Link>

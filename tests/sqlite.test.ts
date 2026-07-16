@@ -13,8 +13,6 @@ function makeConversation(id: string): Conversation {
     title: null,
     status: 'active',
     messages: [],
-    valueUp: 0,
-    valueDown: 0,
     createdAt: '2026-07-15T10:00:00Z',
     publishedAt: null,
   };
@@ -48,10 +46,13 @@ describe('SqliteConversationRepository', () => {
     expect(list[0].title).toBe('حقیقت چیست؟');
     expect(list[0].turns).toBe(1);
 
-    expect(repo.recordValueSignal('c1', 'viewer-1', true, '2026-07-15T12:00:00Z')).toBe('recorded');
-    expect(repo.recordValueSignal('c1', 'viewer-1', false, '2026-07-15T12:01:00Z')).toBe('duplicate');
-    expect(repo.findById('c1')!.valueUp).toBe(1);
-    expect(repo.findById('c1')!.valueDown).toBe(0);
+    // سیگنالِ معرفتی (اثر بر فهم)، یک‌بار per (نوع، کنشگر)
+    expect(repo.recordEpistemicSignal('c1', 'understood-more', 'viewer-1', '2026-07-15T12:00:00Z')).toBe('recorded');
+    expect(repo.recordEpistemicSignal('c1', 'understood-more', 'viewer-1', '2026-07-15T12:01:00Z')).toBe('duplicate');
+    expect(repo.recordEpistemicSignal('c1', 'thought-more', 'viewer-1', '2026-07-15T12:02:00Z')).toBe('recorded');
+    expect(repo.signalCounts('c1')['understood-more']).toBe(1);
+    expect(repo.listPublished(10)[0].understoodCount).toBe(1);
+    expect(repo.listPublished(10)[0].impact).toBeGreaterThan(0);
   });
 
   it('جست‌وجوی FTS و فیلتر بازه‌ی زمانی', () => {

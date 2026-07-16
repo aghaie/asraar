@@ -4,7 +4,7 @@ import { LIMITS } from '@/core/domain/conversation';
 import { finishConversation } from '@/core/usecases/finish-conversation';
 import { getTranslatedConversation } from '@/core/usecases/get-translated-conversation';
 import { listPublishedConversations } from '@/core/usecases/list-published-conversations';
-import { recordValueSignal } from '@/core/usecases/record-value-signal';
+import { recordEpistemicSignal } from '@/core/usecases/record-epistemic-signal';
 import { sendMessage } from '@/core/usecases/send-message';
 import { startConversation } from '@/core/usecases/start-conversation';
 import { testDeps } from './helpers/in-memory';
@@ -178,7 +178,7 @@ describe('finishConversation', () => {
   });
 });
 
-describe('recordValueSignal', () => {
+describe('recordEpistemicSignal (اثر بر فهم — ADR-0022)', () => {
   async function publishedConversation(deps: ReturnType<typeof testDeps>) {
     const { id, ownerToken } = startConversation(deps, 'author');
     await sendMessage(deps, {
@@ -191,18 +191,30 @@ describe('recordValueSignal', () => {
     return id;
   }
 
-  it('هر بیننده فقط یک بار می‌تواند نظر بدهد', async () => {
+  it('هر کنشگر هر نوع سیگنال را فقط یک بار می‌تواند بدهد', async () => {
     const deps = testDeps();
     const id = await publishedConversation(deps);
-    recordValueSignal(deps, id, 'viewer-1', true);
-    expectDomainError(() => recordValueSignal(deps, id, 'viewer-1', false), 'DUPLICATE_SIGNAL');
-    expect(deps.repo.findById(id)!.valueUp).toBe(1);
+    recordEpistemicSignal(deps, id, 'viewer-1', 'understood-more');
+    expectDomainError(
+      () => recordEpistemicSignal(deps, id, 'viewer-1', 'understood-more'),
+      'DUPLICATE_SIGNAL',
+    );
+    expect(deps.repo.signalCounts(id)['understood-more']).toBe(1);
   });
 
-  it('روی گفتگوی منتشر‌نشده نظر ثبت نمی‌شود', () => {
+  it('نوع سیگنالِ نامعتبر (محبوبیت) رد می‌شود', async () => {
+    const deps = testDeps();
+    const id = await publishedConversation(deps);
+    expectDomainError(() => recordEpistemicSignal(deps, id, 'viewer-1', 'like'), 'VALIDATION');
+  });
+
+  it('روی گفتگوی منتشر‌نشده سیگنال ثبت نمی‌شود', () => {
     const deps = testDeps();
     const { id } = startConversation(deps, 'author');
-    expectDomainError(() => recordValueSignal(deps, id, 'viewer-1', true), 'NOT_FOUND');
+    expectDomainError(
+      () => recordEpistemicSignal(deps, id, 'viewer-1', 'understood-more'),
+      'NOT_FOUND',
+    );
   });
 });
 

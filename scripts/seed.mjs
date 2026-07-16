@@ -22,13 +22,15 @@ const T = (dayOffset, hour = 9) => {
   return d.toISOString();
 };
 
-/** هر گفتگو: عنوان از نخستین پرسش ساخته می‌شود؛ turns = زوج‌های پرسش/پاسخ. */
+/**
+ * هر گفتگو: عنوان از نخستین پرسش ساخته می‌شود؛ turns = زوج‌های پرسش/پاسخ.
+ * understood = شمارِ سیگنالِ معرفتیِ «فهمم را بیشتر کرد» (ADR-0022؛ نه محبوبیت).
+ */
 const CONVERSATIONS = [
   {
     id: 'seed-1',
     publishedAt: T(0, 9),
-    valueUp: 34,
-    valueDown: 2,
+    understood: 12,
     turns: [
       {
         seeker: 'حقیقت چیست؟ از کجا بدانم چه چیزی حقیقت است و چه چیزی پندار؟',
@@ -45,8 +47,7 @@ const CONVERSATIONS = [
   {
     id: 'seed-2',
     publishedAt: T(1, 14),
-    valueUp: 21,
-    valueDown: 1,
+    understood: 8,
     turns: [
       {
         seeker: 'هدف از زندگی چیست؟ چرا اصلاً آفریده شده‌ایم؟',
@@ -63,8 +64,7 @@ const CONVERSATIONS = [
   {
     id: 'seed-3',
     publishedAt: T(4, 11),
-    valueUp: 47,
-    valueDown: 3,
+    understood: 21,
     turns: [
       {
         seeker: 'اگر خدایی هست که مهربان است، چرا این‌همه رنج و بدی در جهان هست؟',
@@ -81,8 +81,7 @@ const CONVERSATIONS = [
   {
     id: 'seed-4',
     publishedAt: T(20, 16),
-    valueUp: 19,
-    valueDown: 1,
+    understood: 6,
     turns: [
       {
         seeker: 'مرگ پایانِ همه‌چیز است، یا چیزی پس از آن هست؟',
@@ -99,8 +98,7 @@ const CONVERSATIONS = [
   {
     id: 'seed-5',
     publishedAt: T(100, 10),
-    valueUp: 28,
-    valueDown: 2,
+    understood: 15,
     turns: [
       {
         seeker: 'چطور بفهمم راهی که در زندگی انتخاب کرده‌ام درست است یا در اشتباهم؟',
@@ -136,13 +134,15 @@ db.exec('BEGIN');
 try {
   // پاک‌سازی رکوردهای seed پیشین (idempotent)
   db.prepare(`DELETE FROM messages WHERE conversation_id IN (${placeholders})`).run(...ids);
-  db.prepare(`DELETE FROM value_signals WHERE conversation_id IN (${placeholders})`).run(...ids);
   db.prepare(`DELETE FROM search_index WHERE conversation_id IN (${placeholders})`).run(...ids);
+  db.prepare(
+    `DELETE FROM epistemic_signals WHERE content_type='conversation' AND content_id IN (${placeholders})`,
+  ).run(...ids);
   db.prepare(`DELETE FROM conversations WHERE id IN (${placeholders})`).run(...ids);
 
   const insertConv = db.prepare(
-    `INSERT INTO conversations (id, owner_token, user_id, title, status, value_up, value_down, created_at, published_at)
-     VALUES (?, ?, NULL, ?, 'published', ?, ?, ?, ?)`,
+    `INSERT INTO conversations (id, owner_token, user_id, title, status, created_at, published_at)
+     VALUES (?, ?, NULL, ?, 'published', ?, ?)`,
   );
   const insertMsg = db.prepare(
     `INSERT INTO messages (conversation_id, seq, role, content, original_content, created_at)
@@ -150,6 +150,10 @@ try {
   );
   const insertFts = db.prepare(
     'INSERT INTO search_index (conversation_id, title, body) VALUES (?, ?, ?)',
+  );
+  const insertSignal = db.prepare(
+    `INSERT INTO epistemic_signals (content_type, content_id, kind, actor_key, created_at)
+     VALUES ('conversation', ?, 'understood-more', ?, ?)`,
   );
 
   for (const c of CONVERSATIONS) {
@@ -159,8 +163,6 @@ try {
       c.id,
       crypto.randomBytes(32).toString('base64url'),
       title,
-      c.valueUp,
-      c.valueDown,
       createdAt,
       c.publishedAt,
     );
@@ -175,6 +177,11 @@ try {
       bodyParts.push(turn.seeker, turn.monad);
     }
     insertFts.run(c.id, title, bodyParts.join('\n'));
+
+    // سیگنال‌های معرفتیِ نمونه (اثر بر فهم؛ نه محبوبیت) — actorهای متمایز
+    for (let i = 0; i < (c.understood ?? 0); i += 1) {
+      insertSignal.run(c.id, `seed-actor-${c.id}-${i}`, c.publishedAt);
+    }
   }
 
   db.exec('COMMIT');

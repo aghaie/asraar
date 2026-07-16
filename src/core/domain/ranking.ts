@@ -1,17 +1,16 @@
 /**
- * الگوریتم دیده‌شدن مناد.
+ * الگوریتم دیده‌شدن مناد — بازطراحی‌شده بر «اثر بر فهم» (ADR-0022، اصل ۳).
  *
- * ورودی‌های مجاز: کیفیت (نسبت «ارزشمند بود»)، عمق گفتگو، تازگی.
- * ورودی‌های ممنوع: شهرت، فالوئر، پول، تبلیغ — چنین داده‌ای اصلاً در مدل وجود ندارد.
- *
- * - کیفیت با تخمین لاپلاس محاسبه می‌شود تا گفتگوی تازه با یک رأی، صدر را نگیرد.
- * - عمق لگاریتمی است تا گفتگوی طولانیِ کم‌مایه بر گفتگوی کوتاهِ پرمایه غلبه نکند.
- * - تازگی فقط ضریب ملایم است؛ حقیقت با گذشت زمان بی‌ارزش نمی‌شود.
+ * محبوبیت هرگز سنجیده نمی‌شود. ورودی‌ها فقط:
+ *  - impact: مجموعِ وزنیِ سیگنال‌های معرفتی (بیشتر فکر کردم، فهمم بیشتر شد، مبنای ادامه شد،
+ *    شاخه ساختم، پس‌زمینه را خواندم، بعداً بازگشتم). هیچ سیگنالِ منفی‌ای نیست.
+ *  - عمق گفتگو (لگاریتمی، تا پرحرفی بر پرمایگی نچربد).
+ *  - تازگی (ضریبِ ملایم؛ حقیقت با زمان بی‌ارزش نمی‌شود).
  */
 
 export interface Rankable {
-  valueUp: number;
-  valueDown: number;
+  /** اثرِ معرفتیِ وزنی (epistemicImpact از روی شمارِ سیگنال‌ها) */
+  impact: number;
   turns: number;
   publishedAt: string;
 }
@@ -19,12 +18,12 @@ export interface Rankable {
 const RECENCY_HALF_LIFE_DAYS = 14;
 
 export function score(item: Rankable, now: Date): number {
-  const quality = (item.valueUp + 1) / (item.valueUp + item.valueDown + 2);
+  const effect = Math.log1p(Math.max(0, item.impact));
   const depth = Math.log1p(Math.max(0, item.turns));
   const ageDays =
     Math.max(0, now.getTime() - new Date(item.publishedAt).getTime()) / 86_400_000;
   const recency = Math.exp((-Math.LN2 * ageDays) / RECENCY_HALF_LIFE_DAYS);
-  return quality * (1 + depth) * (0.6 + 0.4 * recency);
+  return (1 + effect) * (1 + depth) * (0.6 + 0.4 * recency);
 }
 
 export function rank<T extends Rankable>(items: T[], now: Date): T[] {

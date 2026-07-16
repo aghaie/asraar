@@ -19,6 +19,8 @@ export default async function ConversationPage({
 
   if (!conversation || conversation.status !== 'published') notFound();
 
+  const counts = repo.signalCounts(id);
+
   // زبان مرجّح خواننده و زبان اصلی گفتگو
   const acceptLang = (await headers()).get('accept-language');
   const readerLang = preferredLanguageFrom(acceptLang, SUPPORTED_LANGS);
@@ -34,8 +36,7 @@ export default async function ConversationPage({
       id={conversation.id}
       title={conversation.title ?? 'گفتگو'}
       publishedAt={conversation.publishedAt!}
-      valueUp={conversation.valueUp}
-      valueDown={conversation.valueDown}
+      signalCounts={counts}
       messages={conversation.messages.map((m) => ({
         role: m.role,
         content: m.content,

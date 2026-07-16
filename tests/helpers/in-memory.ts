@@ -16,6 +16,11 @@ import type {
 import type { OwnedConversationSummary, Session, User } from '@/core/domain/user';
 import type { IdentityRepository } from '@/core/ports/identity-repository';
 import type { ContentModerator, ModerationResult } from '@/core/ports/content-moderator';
+import {
+  epistemicImpact,
+  type EpistemicSignalKind,
+  type SignalCounts,
+} from '@/core/domain/epistemic-signal';
 
 export class InMemoryConversationRepository implements ConversationRepository {
   private readonly store = new Map<string, Conversation>();
@@ -76,31 +81,37 @@ export class InMemoryConversationRepository implements ConversationRepository {
   }
 
   private summary(c: Conversation): PublishedSummary {
+    const counts = this.signalCounts(c.id);
     return {
       id: c.id,
       title: c.title ?? 'گفتگو',
       excerpt: excerptOf(c),
       turns: c.messages.filter((m) => m.role === 'seeker').length,
-      valueUp: c.valueUp,
-      valueDown: c.valueDown,
+      impact: epistemicImpact(counts),
+      understoodCount: counts['understood-more'] ?? 0,
       publishedAt: c.publishedAt!,
     };
   }
 
-  private readonly signals = new Set<string>();
+  private readonly signalRows = new Map<string, { id: string; kind: string }>();
 
-  recordValueSignal(
+  recordEpistemicSignal(
     conversationId: string,
-    voterKey: string,
-    valuable: boolean,
+    kind: EpistemicSignalKind,
+    actorKey: string,
   ): 'recorded' | 'duplicate' {
-    const key = `${conversationId}:${voterKey}`;
-    if (this.signals.has(key)) return 'duplicate';
-    this.signals.add(key);
-    const c = this.store.get(conversationId)!;
-    if (valuable) c.valueUp += 1;
-    else c.valueDown += 1;
+    const key = `${conversationId}:${kind}:${actorKey}`;
+    if (this.signalRows.has(key)) return 'duplicate';
+    this.signalRows.set(key, { id: conversationId, kind });
     return 'recorded';
+  }
+
+  signalCounts(conversationId: string): SignalCounts {
+    const counts: SignalCounts = {};
+    for (const { id, kind } of this.signalRows.values()) {
+      if (id === conversationId) counts[kind] = (counts[kind] ?? 0) + 1;
+    }
+    return counts;
   }
 
   listByUser(userId: string): OwnedConversationSummary[] {

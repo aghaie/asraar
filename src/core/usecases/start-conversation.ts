@@ -41,8 +41,6 @@ export function startConversation(
     title: null,
     status: 'active',
     messages: [],
-    valueUp: 0,
-    valueDown: 0,
     createdAt: deps.now().toISOString(),
     publishedAt: null,
   };

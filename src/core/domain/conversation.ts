@@ -26,19 +26,23 @@ export interface Conversation {
   title: string | null;
   status: ConversationStatus;
   messages: Message[];
-  valueUp: number;
-  valueDown: number;
   createdAt: string;
   publishedAt: string | null;
 }
 
+/**
+ * خلاصه‌ی یک گفتگوی منتشرشده برای فهرست/کارت.
+ * ADR-0022 (اصل ۳): محبوبیت اندازه گرفته نمی‌شود؛ فقط «اثر بر فهم».
+ * - impact: اثرِ معرفتیِ وزنی (برای رتبه‌بندی)
+ * - understoodCount: شمارِ «فهمم را بیشتر کرد» (برای نمایشِ آرام)
+ */
 export interface PublishedSummary {
   id: string;
   title: string;
   excerpt: string;
   turns: number;
-  valueUp: number;
-  valueDown: number;
+  impact: number;
+  understoodCount: number;
   publishedAt: string;
 }
 

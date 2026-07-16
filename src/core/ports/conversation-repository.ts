@@ -4,6 +4,7 @@ import type {
   Message,
   PublishedSummary,
 } from '../domain/conversation';
+import type { EpistemicSignalKind, SignalCounts } from '../domain/epistemic-signal';
 import type { OwnedConversationSummary } from '../domain/user';
 
 /** پورت مخزن گفتگوها — پیاده‌سازی فعلی SQLite است و بعداً بدون تغییر Core عوض می‌شود. */
@@ -26,13 +27,19 @@ export interface ConversationRepository {
   listPublished(limit: number, sinceIso?: string | null, untilIso?: string | null): PublishedSummary[];
   /** جست‌وجوی تمام‌متنِ گفتگوهای منتشرشده؛ match باید عبارت امنِ FTS5 باشد. */
   search(match: string, limit: number): PublishedSummary[];
-  /** ثبت سیگنال ارزش؛ هر بیننده برای هر گفتگو فقط یک بار. */
-  recordValueSignal(
+
+  /**
+   * ثبت سیگنالِ معرفتی (ADR-0022، اصل ۳): «اثر بر فهم»، نه محبوبیت.
+   * هر کنشگر برای هر گفتگو هر نوع سیگنال را فقط یک بار.
+   */
+  recordEpistemicSignal(
     conversationId: string,
-    voterKey: string,
-    valuable: boolean,
+    kind: EpistemicSignalKind,
+    actorKey: string,
     at: string,
   ): 'recorded' | 'duplicate';
+  /** شمارِ سیگنال‌های معرفتیِ یک گفتگو (برای صفحه‌ی گفتگو). */
+  signalCounts(conversationId: string): SignalCounts;
 
   /** بایگانی خصوصی کاربر: همه‌ی گفتگوهای او (هر وضعیتی)، جدیدترین اول. */
   listByUser(userId: string): OwnedConversationSummary[];

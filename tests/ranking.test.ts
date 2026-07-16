@@ -5,18 +5,17 @@ const NOW = new Date('2026-07-15T12:00:00Z');
 
 function item(overrides: Partial<Rankable>): Rankable {
   return {
-    valueUp: 0,
-    valueDown: 0,
+    impact: 0,
     turns: 5,
     publishedAt: '2026-07-10T12:00:00Z',
     ...overrides,
   };
 }
 
-describe('score', () => {
-  it('گفتگوی ارزشمندتر بالاتر می‌ایستد', () => {
-    const strong = item({ valueUp: 30, valueDown: 2 });
-    const weak = item({ valueUp: 2, valueDown: 30 });
+describe('score (اثر بر فهم — ADR-0022)', () => {
+  it('گفتگوی پراثرتر بر فهم، بالاتر می‌ایستد', () => {
+    const strong = item({ impact: 30 });
+    const weak = item({ impact: 1 });
     expect(score(strong, NOW)).toBeGreaterThan(score(weak, NOW));
   });
 
@@ -26,10 +25,8 @@ describe('score', () => {
     expect(score(deep, NOW)).toBeGreaterThan(score(shallow, NOW));
   });
 
-  it('یک رأی مثبتِ تنها، بر سابقه‌ی قوی غلبه نمی‌کند (تخمین لاپلاس)', () => {
-    const newcomer = item({ valueUp: 1, valueDown: 0 });
-    const established = item({ valueUp: 90, valueDown: 10 });
-    expect(score(established, NOW)).toBeGreaterThan(score(newcomer, NOW));
+  it('گفتگوی بی‌اثر (impact صفر) هم امتیازِ پایه از عمق/تازگی دارد', () => {
+    expect(score(item({ impact: 0 }), NOW)).toBeGreaterThan(0);
   });
 
   it('گذشت زمان گفتگوی حقیقی را بی‌ارزش نمی‌کند — افت ملایم است', () => {
@@ -43,8 +40,8 @@ describe('score', () => {
 
 describe('rank', () => {
   it('ترتیب نزولی امتیاز را برمی‌گرداند و ورودی را تغییر نمی‌دهد', () => {
-    const a = item({ valueUp: 50, turns: 15 });
-    const b = item({ valueUp: 1, turns: 1 });
+    const a = item({ impact: 50, turns: 15 });
+    const b = item({ impact: 0, turns: 1 });
     const input = [b, a];
     const output = rank(input, NOW);
     expect(output[0]).toBe(a);

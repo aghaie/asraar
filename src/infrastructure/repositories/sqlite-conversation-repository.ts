@@ -6,6 +6,12 @@ import {
   type Message,
   type PublishedSummary,
 } from '@/core/domain/conversation';
+import {
+  epistemicImpact,
+  isEpistemicSignalKind,
+  type EpistemicSignalKind,
+  type SignalCounts,
+} from '@/core/domain/epistemic-signal';
 import type { ConversationRepository } from '@/core/ports/conversation-repository';
 import type { OwnedConversationSummary } from '@/core/domain/user';
 
@@ -15,8 +21,6 @@ interface ConversationRow {
   user_id: string | null;
   title: string | null;
   status: ConversationStatus;
-  value_up: number;
-  value_down: number;
   created_at: string;
   published_at: string | null;
 }
@@ -32,10 +36,12 @@ export class SqliteConversationRepository implements ConversationRepository {
   constructor(private readonly db: DatabaseSync) {}
 
   create(c: Conversation): void {
+    // ستون‌های value_up/value_down (محبوبیت) دیگر استفاده نمی‌شوند (ADR-0022)؛
+    // با پیش‌فرضِ DB صفر می‌مانند و در دامنه حضور ندارند.
     this.db
       .prepare(
-        `INSERT INTO conversations (id, owner_token, user_id, title, status, value_up, value_down, created_at, published_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO conversations (id, owner_token, user_id, title, status, created_at, published_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         c.id,
@@ -43,8 +49,6 @@ export class SqliteConversationRepository implements ConversationRepository {
         c.userId,
         c.title,
         c.status,
-        c.valueUp,
-        c.valueDown,
         c.createdAt,
         c.publishedAt,
       );
@@ -76,8 +80,6 @@ export class SqliteConversationRepository implements ConversationRepository {
       title: row.title,
       status: row.status,
       messages,
-      valueUp: row.value_up,
-      valueDown: row.value_down,
       createdAt: row.created_at,
       publishedAt: row.published_at,
     };
@@ -227,36 +229,44 @@ export class SqliteConversationRepository implements ConversationRepository {
 
   private summaryFromRow(row: ConversationRow & { turns: number }): PublishedSummary {
     const conversation = this.findById(row.id)!;
+    const counts = this.signalCounts(row.id);
     return {
       id: row.id,
       title: row.title ?? 'گفتگو',
       excerpt: excerptOf(conversation),
       turns: row.turns,
-      valueUp: row.value_up,
-      valueDown: row.value_down,
+      impact: epistemicImpact(counts),
+      understoodCount: counts['understood-more'] ?? 0,
       publishedAt: row.published_at!,
     };
   }
 
-  recordValueSignal(
+  signalCounts(conversationId: string): SignalCounts {
+    const rows = this.db
+      .prepare(
+        `SELECT kind, COUNT(*) AS c FROM epistemic_signals
+         WHERE content_type = 'conversation' AND content_id = ?
+         GROUP BY kind`,
+      )
+      .all(conversationId) as unknown as { kind: string; c: number }[];
+    const counts: SignalCounts = {};
+    for (const r of rows) counts[r.kind] = r.c;
+    return counts;
+  }
+
+  recordEpistemicSignal(
     conversationId: string,
-    voterKey: string,
-    valuable: boolean,
+    kind: EpistemicSignalKind,
+    actorKey: string,
     at: string,
   ): 'recorded' | 'duplicate' {
+    if (!isEpistemicSignalKind(kind)) return 'duplicate';
     const result = this.db
       .prepare(
-        `INSERT OR IGNORE INTO value_signals (conversation_id, voter_key, valuable, created_at)
-         VALUES (?, ?, ?, ?)`,
+        `INSERT OR IGNORE INTO epistemic_signals (content_type, content_id, kind, actor_key, created_at)
+         VALUES ('conversation', ?, ?, ?, ?)`,
       )
-      .run(conversationId, voterKey, valuable ? 1 : 0, at);
-
-    if (Number(result.changes) === 0) return 'duplicate';
-
-    const column = valuable ? 'value_up' : 'value_down';
-    this.db
-      .prepare(`UPDATE conversations SET ${column} = ${column} + 1 WHERE id = ?`)
-      .run(conversationId);
-    return 'recorded';
+      .run(conversationId, kind, actorKey, at);
+    return Number(result.changes) === 0 ? 'duplicate' : 'recorded';
   }
 }
