@@ -412,3 +412,283 @@ select {
     transition: none !important;
   }
 }
+
+/* ————— کامپوننت‌های معماری معرفتی (ADR-0022) — خروجی Claude Design ————— */
+
+/* سیگنال‌های معرفتی — اثر بر فهم، نه محبوبیت */
+.signal-bar {
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--border);
+  margin-top: 2.2rem;
+}
+.signal-q {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  margin-bottom: 0.7rem;
+}
+.signal-chips {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.signal-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0.45rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.signal-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.signal-chip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.signal-chip[aria-pressed='true'] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.signal-chip[aria-pressed='true']::before {
+  content: '✓';
+  font-size: 0.72rem;
+}
+.signal-note {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  margin-top: 0.8rem;
+  text-wrap: pretty;
+}
+
+/* پاسخ سه‌لایه — کوتاه → استدلال → مبنای قرآنی */
+.answer {
+  background: var(--accent-soft);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+}
+.answer .who {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-soft);
+  margin-bottom: 0.35rem;
+}
+.answer .short {
+  font-size: 1rem;
+  line-height: 2;
+  text-wrap: pretty;
+}
+.layers {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.layer {
+  border-bottom: 1px solid var(--border);
+}
+.layer summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  color: var(--accent);
+}
+.layer summary::-webkit-details-marker {
+  display: none;
+}
+.layer summary::before {
+  content: '▸';
+  font-size: 0.68rem;
+  transition: transform 0.2s;
+}
+.layer[open] summary::before {
+  transform: rotate(90deg);
+}
+.layer summary:hover {
+  color: var(--text);
+}
+.layer summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.layer .body {
+  font-size: 0.9rem;
+  color: var(--text-soft);
+  line-height: 2;
+  padding: 0 1.15rem 1rem;
+  text-wrap: pretty;
+}
+.layer[open] .body {
+  animation: layer-in 0.25s ease;
+}
+@keyframes layer-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+/* شاخهٔ خنثی — «این مسیر را ادامه بده» */
+.branch-row {
+  display: flex;
+  margin: 0.2rem 0 1.4rem;
+}
+.branch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 999px;
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  padding: 0.35rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.branch-btn:hover {
+  border-color: var(--accent);
+  border-style: solid;
+  color: var(--accent);
+}
+.branch-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.branches {
+  border-top: 1px solid var(--border);
+  padding-top: 1.2rem;
+  margin-top: 2rem;
+}
+.branches h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+.branches .note {
+  font-size: 0.8rem;
+  color: var(--text-soft);
+  margin-bottom: 0.9rem;
+  text-wrap: pretty;
+}
+.branch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.branch-card {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.85rem 1.05rem;
+  color: var(--text);
+  font-size: 0.92rem;
+  line-height: 1.9;
+}
+.branch-card:hover {
+  border-color: var(--accent);
+  text-decoration: none;
+}
+.branch-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.branch-card .lead {
+  font-size: 0.72rem;
+  color: var(--text-soft);
+  margin-bottom: 0.15rem;
+}
+
+/* سوییچر زبان — آیکن هدر */
+.lang-switch {
+  position: relative;
+  display: inline-flex;
+}
+.lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 44px;
+  min-width: 44px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.25rem 0.8rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.lang-btn:hover {
+  border-color: var(--border);
+  color: var(--text);
+}
+.lang-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.lang-btn svg {
+  flex: none;
+}
+.lang-menu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  inset-inline-end: 0;
+  min-width: 11rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0.3rem;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.08);
+  z-index: 10;
+}
+.lang-menu a,
+.lang-menu button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.4rem 0.8rem;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: start;
+}
+.lang-menu a:hover,
+.lang-menu button:hover {
+  background: var(--accent-soft);
+  text-decoration: none;
+}
+.lang-menu a.active,
+.lang-menu button.active {
+  color: var(--accent);
+  font-weight: 700;
+}
+.lang-menu a.active::after,
+.lang-menu button.active::after {
+  content: '✓';
+  font-size: 0.78rem;
+}

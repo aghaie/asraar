@@ -161,20 +161,26 @@ export function ConversationView(props: Props) {
         ))}
       </div>
 
-      <div className="value-bar" dir="rtl">
-        <span>این گفتگو چه اثری بر فهمِ تو داشت؟</span>
-        {SIGNALS.map((s) => (
-          <button
-            key={s.kind}
-            className="btn secondary"
-            onClick={() => void sendSignal(s.kind)}
-            disabled={sent.has(s.kind)}
-          >
-            {s.label}
-            {(counts[s.kind] ?? 0) > 0 ? ` (${counts[s.kind]})` : ''}
-          </button>
-        ))}
-        {signal && <span>{signal}</span>}
+      <div className="signal-bar" dir="rtl">
+        <p className="signal-q">این گفتگو چه اثری بر فهمِ تو داشت؟</p>
+        <div className="signal-chips">
+          {SIGNALS.map((s) => (
+            <button
+              key={s.kind}
+              className="signal-chip"
+              aria-pressed={sent.has(s.kind)}
+              onClick={() => void sendSignal(s.kind)}
+              disabled={sent.has(s.kind)}
+            >
+              {s.label}
+              {(counts[s.kind] ?? 0) > 0 ? ` (${counts[s.kind]})` : ''}
+            </button>
+          ))}
+        </div>
+        <p className="signal-note">
+          {signal ??
+            'پاسخِ تو تنها به سنجشِ اثرِ گفتگو بر فهم کمک می‌کند؛ نه رأیِ منفی هست، نه نشانه‌ی محبوبیت.'}
+        </p>
       </div>
     </article>
   );
