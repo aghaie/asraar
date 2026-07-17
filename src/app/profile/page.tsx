@@ -5,6 +5,7 @@ import { getContainer } from '@/infrastructure/container';
 import { currentUserServer } from '@/lib/auth';
 import { currentLocale } from '@/lib/locale';
 import { t } from '@/i18n/t';
+import { formatDate } from '@/lib/format-date';
 
 import { NameEditor } from './name-editor';
 
@@ -20,7 +21,6 @@ export default async function ProfilePage() {
   const user = await currentUserServer();
   if (!user) redirect('/login');
   const locale = await currentLocale();
-  const dateFormat = new Intl.DateTimeFormat(locale, { dateStyle: 'medium' });
 
   const conversations = getMyConversations(getContainer().repo, user.id);
 
@@ -52,7 +52,7 @@ export default async function ProfilePage() {
               <div className="meta">
                 <span>{t(locale, STATUS_KEY[c.status])}</span>
                 <span>{t(locale, 'card.turns', { turns: c.turns })}</span>
-                <span>{dateFormat.format(new Date(c.publishedAt ?? c.createdAt))}</span>
+                <span>{formatDate(locale, c.publishedAt ?? c.createdAt)}</span>
               </div>
             </>
           );

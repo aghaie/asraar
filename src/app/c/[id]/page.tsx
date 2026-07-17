@@ -42,6 +42,7 @@ export default async function ConversationPage({
         turns: b.turns,
       }))}
       parentId={conversation.parentId}
+      originalLang={originalLang}
       messages={conversation.messages.map((m) => ({
         role: m.role,
         content: m.content,

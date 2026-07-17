@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useT } from '@/i18n/provider';
-import { LANGUAGES, RTL_LANGS, labelOf } from './languages';
+import { RTL_LANGS, labelOf } from './languages';
 import { ownerTokenKey } from '@/lib/branch-token';
 
 interface ViewMessage {
@@ -36,6 +36,8 @@ interface Props {
   branches: BranchView[];
   /** اگر این گفتگو خودش شاخه باشد، شناسه‌ی والد */
   parentId?: string | null;
+  /** زبان اصلیِ گفتگو — برای جهتِ نمایش وقتی ترجمه‌ای فعال نیست */
+  originalLang: string;
   /** زبان مرجّح خواننده (اگر با زبان اصلی فرق داشته باشد) — برای پیشنهاد ترجمه */
   preferredLang?: string | null;
   /** ترجمه‌ی ازپیش‌کش‌شده به زبان خواننده (رایگان، بدون فراخوان تازه) */
@@ -112,7 +114,8 @@ export function ConversationView(props: Props) {
   const active = translated && lang === translated.lang ? translated : null;
   const title = active?.title ?? props.title;
   const messages = active?.messages ?? props.messages;
-  const dir = RTL_LANGS.has(lang) ? 'rtl' : 'ltr';
+  // جهتِ نمایش از زبانِ محتوای فعلی می‌آید: ترجمهٔ فعال، وگرنه زبانِ اصلیِ گفتگو.
+  const dir = RTL_LANGS.has(active ? lang : props.originalLang) ? 'rtl' : 'ltr';
 
   async function changeLanguage(code: string) {
     setLang(code);
@@ -167,23 +170,12 @@ export function ConversationView(props: Props) {
     <article dir={dir}>
       <h1 className="page-title">{title}</h1>
 
-      <div className="lang-bar" dir="rtl">
-        <label htmlFor="lang">{t('conv.readIn')}</label>
-        <select
-          id="lang"
-          value={lang}
-          onChange={(e) => void changeLanguage(e.target.value)}
-          disabled={translating}
-        >
-          {LANGUAGES.map((l) => (
-            <option key={l.code} value={l.code}>
-              {l.label}
-            </option>
-          ))}
-        </select>
-        {translating && <span>{t('conv.translating')}</span>}
-        {active && <span>{t('conv.machineNote')}</span>}
-      </div>
+      {(translating || active) && (
+        <div className="lang-bar" dir={dir}>
+          {translating && <span>{t('conv.translating')}</span>}
+          {active && <span>{t('conv.machineNote')}</span>}
+        </div>
+      )}
 
       {showOffer && (
         <div className="notice" dir="rtl" style={{ marginTop: '0.8rem' }}>

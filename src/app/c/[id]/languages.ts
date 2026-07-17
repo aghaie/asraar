@@ -1,12 +1,11 @@
 /**
  * فهرست زبان‌ها — ماژول ساده (بدون 'use client') تا هم صفحه‌ی سرور و هم
- * کامپوننت کلاینت بتوانند import کنند. (import ثابت از ماژول کلاینت به سرور
- * مقدار را به reference تبدیل می‌کند و می‌شکند.)
+ * کامپوننت کلاینت بتوانند import کنند.
  */
 export const LANGUAGES: { code: string; label: string }[] = [
-  { code: '', label: 'زبان اصلی' },
-  { code: 'en', label: 'English' },
+  { code: 'fa', label: 'فارسی' },
   { code: 'ar', label: 'العربية' },
+  { code: 'en', label: 'English' },
   { code: 'tr', label: 'Türkçe' },
   { code: 'ur', label: 'اردو' },
   { code: 'id', label: 'Bahasa Indonesia' },
@@ -16,16 +15,25 @@ export const LANGUAGES: { code: string; label: string }[] = [
   { code: 'ru', label: 'Русский' },
   { code: 'zh', label: '中文' },
   { code: 'hi', label: 'हिन्दी' },
-  { code: 'fa', label: 'فارسی' },
 ];
 
-/** کدهای زبانِ پشتیبانی‌شده برای تطبیق با Accept-Language (بدون «زبان اصلی») */
-export const SUPPORTED_LANGS: string[] = LANGUAGES.filter((l) => l.code).map(
-  (l) => l.code,
-);
+/** کدهای زبانِ پشتیبانی‌شده برای تطبیق با Accept-Language و ترجمه. */
+export const SUPPORTED_LANGS: string[] = LANGUAGES.map((l) => l.code);
+
+/**
+ * زبان‌هایی که فعلاً در سوییچرِ هدر نمایش داده می‌شوند (بقیه مخفی، نه حذف‌شده).
+ * ترتیب: فارسی اول. با اثباتِ آماده‌بودنِ کاتالوگِ سایر زبان‌ها، این فهرست گسترش می‌یابد.
+ */
+export const VISIBLE_LANGS: string[] = ['fa', 'ar', 'en'];
+
+export function visibleLanguages(): { code: string; label: string }[] {
+  return VISIBLE_LANGS.map(
+    (code) => LANGUAGES.find((l) => l.code === code)!,
+  ).filter(Boolean);
+}
 
 export function labelOf(code: string): string {
   return LANGUAGES.find((l) => l.code === code)?.label ?? code;
 }
 
-export const RTL_LANGS = new Set(['fa', 'ar', 'ur', '']);
+export const RTL_LANGS = new Set(['fa', 'ar', 'ur']);

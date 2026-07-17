@@ -1,9 +1,10 @@
+import Link from 'next/link';
 import { currentLocale } from '@/lib/locale';
 import { t } from '@/i18n/t';
 
 export const dynamic = 'force-dynamic';
 
-/** درباره‌ی مناد — بیانِ ساده‌ی مأموریت، بنیانِ قرآنی و فروتنی. */
+/** درباره‌ی مناد — بیانِ ساده‌ی مأموریت، بنیانِ قرآنی و فروتنی. لینکِ هدیه این‌جاست. */
 export default async function AboutPage() {
   const locale = await currentLocale();
   return (
@@ -15,6 +16,11 @@ export default async function AboutPage() {
         <p>{t(locale, 'about.p3')}</p>
         <p>{t(locale, 'about.p4')}</p>
         <p style={{ color: 'var(--text-soft)' }}>{t(locale, 'about.p5')}</p>
+        <div className="actions" style={{ marginTop: '0.4rem' }}>
+          <Link className="btn secondary" href="/gift">
+            {t(locale, 'nav.gift')}
+          </Link>
+        </div>
       </div>
     </>
   );

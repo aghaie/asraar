@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useT } from '@/i18n/provider';
-import { LANGUAGES } from '../c/[id]/languages';
+import { visibleLanguages } from '../c/[id]/languages';
 
 const LTR_LABELS = new Set(['en', 'tr', 'id', 'fr', 'de', 'es']);
 
 /**
- * سوییچرِ زبانِ هدر (ADR-0022): آیکنِ کره‌ی زمین + منوی زبان‌ها.
- * انتخاب، کوکیِ monad_lang را می‌گذارد و صفحه را تازه می‌کند؛ زبان به‌خاطر سپرده می‌شود.
+ * سوییچرِ زبانِ هدر (ADR-0022): آیکنِ کره‌ی زمین + منوی زبان‌ها، هم‌طرازِ آیتم‌های nav.
+ * انتخاب، کوکیِ monad_lang را می‌گذارد و صفحه را تازه می‌کند؛ زبان به‌خاطر سپرده می‌شود
+ * و زبان/جهتِ کلِ سرویس (از جمله محتوای گفتگو) را عوض می‌کند.
  */
 export function LanguageSwitcher({ locale }: { locale: string }) {
   const { t } = useT();
@@ -28,8 +29,7 @@ export function LanguageSwitcher({ locale }: { locale: string }) {
     window.location.reload();
   }
 
-  const current = LANGUAGES.find((l) => l.code === locale);
-  const options = LANGUAGES.filter((l) => l.code); // بدون «زبان اصلی»
+  const options = visibleLanguages();
 
   return (
     <div className="lang-switch" ref={ref}>
@@ -41,8 +41,8 @@ export function LanguageSwitcher({ locale }: { locale: string }) {
         onClick={() => setOpen((o) => !o)}
       >
         <svg
-          width={18}
-          height={18}
+          width={20}
+          height={20}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -52,7 +52,6 @@ export function LanguageSwitcher({ locale }: { locale: string }) {
           <circle cx={12} cy={12} r={9} />
           <path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" />
         </svg>
-        <span>{current?.label ?? t('lang.label')}</span>
       </button>
       {open && (
         <div className="lang-menu" role="menu">

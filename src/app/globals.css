@@ -343,6 +343,97 @@ select {
   padding: 4rem 0;
 }
 
+/* سرِ صفحه: عنوان + ابزارهای آیکنیِ روبه‌رو */
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+.head-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.head-tool {
+  position: relative;
+}
+.head-tool > summary {
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 40px;
+  padding: 0.3rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--text-soft);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.head-tool > summary::-webkit-details-marker {
+  display: none;
+}
+.head-tool > summary:hover {
+  border-color: var(--border);
+  color: var(--text);
+}
+.head-tool[open] > summary {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.head-tool-label {
+  font-size: 0.85rem;
+}
+.head-pop {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  inset-inline-end: 0;
+  z-index: 10;
+  min-width: 13rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 0.5rem;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.08);
+}
+.head-pop input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  padding: 0.55rem 0.8rem;
+}
+.head-pop input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+.head-pop.menu {
+  padding: 0.3rem;
+}
+.head-pop.menu a {
+  display: block;
+  min-height: 40px;
+  line-height: 40px;
+  padding: 0 0.8rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.head-pop.menu a:hover {
+  background: var(--accent-soft);
+  text-decoration: none;
+}
+.head-pop.menu a.active {
+  color: var(--accent);
+  font-weight: 700;
+}
+
 /* جست‌وجو */
 .search-form {
   margin-bottom: 1.25rem;

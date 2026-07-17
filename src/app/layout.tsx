@@ -61,7 +61,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <nav className="nav">
                 <Link href="/new">{t(locale, 'nav.new')}</Link>
                 <Link href="/about">{t(locale, 'nav.about')}</Link>
-                <Link href="/gift">{t(locale, 'nav.gift')}</Link>
                 {user ? (
                   <Link href="/profile">{user.displayName ?? t(locale, 'nav.profile')}</Link>
                 ) : (
@@ -72,7 +71,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </div>
           </header>
           <main className="container">{children}</main>
-          <footer className="site-footer">{t(locale, 'footer')}</footer>
+          <footer className="site-footer">
+            <div>{t(locale, 'footer')}</div>
+            <div style={{ marginTop: '0.5rem' }}>
+              <Link href="/updates">{t(locale, 'nav.updates')}</Link>
+              {' · '}
+              <Link href="/about">{t(locale, 'nav.about')}</Link>
+            </div>
+          </footer>
         </I18nProvider>
       </body>
     </html>
