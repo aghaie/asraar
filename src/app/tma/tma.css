@@ -1,0 +1,125 @@
+/*
+ * مینی‌اپِ تلگرام (ADR-0027) — دیزاینِ دقیقاً بومیِ تلگرام.
+ *
+ * ترفندِ اصلی: کامپوننت‌های مناد همه از متغیرهای برند (--bg/--accent/…) رنگ می‌گیرند،
+ * پس کافی است همان متغیرها را داخلِ .tma-root به توکن‌های تمِ تلگرام (--tg-*) بنگاریم.
+ * آنگاه ChatSessionِ موجود بدونِ هیچ تغییری با رنگ‌های خودِ کاربر در تلگرام دیده می‌شود.
+ * متغیرهای --tg-* را کامپوننتِ کلاینت از Telegram.WebApp.themeParams روی :root می‌نویسد؛
+ * مقادیرِ fallback برای نمایشِ آبرومند پیش از آماده‌شدنِ SDK هستند.
+ *
+ * Next.js این CSS را فقط روی مسیرِ /tma بارگذاری می‌کند؛ روی بقیه‌ی سایت اثری ندارد.
+ */
+
+/* chromeِ مناد داخلِ تلگرام دیده نمی‌شود — تلگرام خودش هدر/ناوبری دارد. */
+.site-header,
+.site-footer {
+  display: none !important;
+}
+
+/* پس‌زمینه‌ی کلِ صفحه هم‌رنگِ تمِ تلگرام (تا لبه‌ها رنگِ مناد نزنند). */
+body:has(.tma-root) {
+  background: var(--tg-bg, #ffffff);
+}
+
+.tma-root {
+  /* ——— بازنگاریِ توکن‌های مناد به تمِ تلگرام ——— */
+  --bg: var(--tg-bg, #ffffff);
+  --surface: var(--tg-secondary-bg, #f1f1f1);
+  --text: var(--tg-text, #222222);
+  --text-soft: var(--tg-hint, #8a8a8a);
+  --accent: var(--tg-button, #3390ec);
+  --accent-contrast: var(--tg-button-text, #ffffff);
+  --accent-soft: var(--tg-secondary-bg, #f1f1f1);
+  --border: color-mix(in srgb, var(--tg-hint, #8a8a8a) 20%, transparent);
+  --radius: 14px;
+
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  /* فونتِ بومیِ سیستم مثلِ خودِ تلگرام (فارسی هم زیبا رندر می‌شود). */
+  font-family: -apple-system, 'Segoe UI', Roboto, 'Vazirmatn', system-ui, sans-serif;
+}
+
+/* حاشیه‌ی فشرده‌تر و بدونِ عنوانِ درشت — حس‌وحالِ چتِ تلگرام. */
+.tma-root .container {
+  padding: 0.75rem 0.9rem 1.25rem;
+  max-width: 46rem;
+}
+.tma-root .page-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  text-align: center;
+  margin: 0.4rem 0 0.9rem;
+}
+
+/* ——— حباب‌های چتِ بومیِ تلگرام ——— */
+.tma-root .messages {
+  gap: 0.4rem;
+  margin: 0.6rem 0 1rem;
+}
+.tma-root .msg {
+  max-width: 85%;
+  padding: 0.55rem 0.85rem;
+  border-radius: 16px;
+  line-height: 1.7;
+  box-shadow: 0 1px 1px rgb(0 0 0 / 0.06);
+}
+/* برچسبِ «تو/مناد» در حبابِ چت لازم نیست. */
+.tma-root .msg .who {
+  display: none;
+}
+/* پیامِ کاربر: حبابِ رنگِ دکمه، چسبیده به لبه‌ی پایانی (مثلِ پیامِ خروجیِ تلگرام). */
+.tma-root .msg.seeker {
+  margin-inline-start: auto;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border: none;
+  border-end-end-radius: 5px;
+}
+/* پیامِ مناد: حبابِ ثانویه، چسبیده به لبه‌ی آغازین (پیامِ ورودی). */
+.tma-root .msg.monad {
+  margin-inline-end: auto;
+  background: var(--surface);
+  color: var(--text);
+  border-end-start-radius: 5px;
+}
+
+/* ——— ورودی و دکمه‌ها ——— */
+.tma-root .composer {
+  margin-top: 0.75rem;
+  gap: 0.55rem;
+}
+.tma-root textarea {
+  min-height: 3rem;
+  border-radius: 18px;
+  background: var(--surface);
+  border-color: transparent;
+  padding: 0.7rem 1rem;
+}
+.tma-root .btn {
+  border-radius: 18px;
+}
+/* دکمه‌ی ثانویه/آرام روی زمینه‌ی تلگرام خوانا بماند. */
+.tma-root .btn.secondary {
+  color: var(--accent);
+}
+.tma-root .btn.quiet {
+  border-color: var(--border);
+  color: var(--text-soft);
+}
+.tma-root .notice {
+  background: var(--surface);
+  border-radius: var(--radius);
+}
+
+/* وضعیت‌های اتصال/خطا. */
+.tma-status {
+  text-align: center;
+  color: var(--text-soft);
+  padding: 3.5rem 1.25rem;
+  font-size: 0.95rem;
+}
+.tma-status.tma-error {
+  color: var(--tg-text, #222222);
+}

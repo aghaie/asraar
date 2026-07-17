@@ -215,6 +215,9 @@ export class InMemoryIdentityRepository implements IdentityRepository {
   findUserByGoogleSub(sub: string): User | null {
     return [...this.users.values()].find((u) => u.googleSub === sub) ?? null;
   }
+  findUserByTelegramId(telegramId: string): User | null {
+    return [...this.users.values()].find((u) => u.telegramId === telegramId) ?? null;
+  }
   findUserById(id: string): User | null {
     return this.users.get(id) ?? null;
   }

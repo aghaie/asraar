@@ -4,6 +4,7 @@ import type { Session, User } from '../domain/user';
 export interface IdentityRepository {
   findUserByEmail(email: string): User | null;
   findUserByGoogleSub(sub: string): User | null;
+  findUserByTelegramId(telegramId: string): User | null;
   findUserById(id: string): User | null;
   createUser(user: User): void;
   updateDisplayName(userId: string, name: string): void;

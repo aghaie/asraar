@@ -10,6 +10,7 @@ import type { TranslationStore, Translator } from '@/core/ports/translator';
 import { FakeAnswerLayerBuilder, LlmAnswerLayerBuilder } from './answer-layers/llm-answer-layer-builder';
 import { SqliteAnswerLayerStore } from './answer-layers/sqlite-answer-layer-store';
 import { googleConfigFromEnv, type GoogleConfig } from './auth/google-oauth';
+import { telegramConfigFromEnv, type TelegramConfig } from './auth/telegram-oauth';
 import { openDatabase } from './db/database';
 import { ConsoleEmailSender } from './email/console-email-sender';
 import { SmtpEmailSender } from './email/smtp-email-sender';
@@ -31,6 +32,7 @@ export interface Container {
   identity: IdentityRepository;
   email: EmailSender;
   google: GoogleConfig | null;
+  telegram: TelegramConfig | null;
   engine: LlmEngine;
   translator: Translator;
   contentModerator: ContentModerator;
@@ -156,6 +158,7 @@ function build(): Container {
   const { engine, translator, contentModerator, answerLayerBuilder } = selectEngine();
   const email = selectEmailSender();
   const google = googleConfigFromEnv();
+  const telegram = telegramConfigFromEnv();
 
   console.log(
     JSON.stringify({
@@ -164,6 +167,7 @@ function build(): Container {
       engine: engine.name,
       email: email.name,
       google: google ? 'on' : 'off',
+      telegram: telegram ? 'on' : 'off',
     }),
   );
 
@@ -172,6 +176,7 @@ function build(): Container {
     identity: new SqliteIdentityRepository(db),
     email,
     google,
+    telegram,
     engine,
     translator,
     contentModerator,

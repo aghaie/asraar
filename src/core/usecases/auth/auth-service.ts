@@ -76,6 +76,7 @@ export function devLoginAs(deps: AuthDeps, rawEmail: string): string {
       id: deps.newId(),
       email,
       googleSub: null,
+      telegramId: null,
       displayName: null,
       createdAt: deps.now().toISOString(),
     };
@@ -97,6 +98,7 @@ export function completeEmailLogin(deps: AuthDeps, token: string): string {
       id: deps.newId(),
       email,
       googleSub: null,
+      telegramId: null,
       displayName: null,
       createdAt: deps.now().toISOString(),
     };
@@ -121,7 +123,31 @@ export function completeGoogleLogin(
       id: deps.newId(),
       email: profile.email ? profile.email.toLowerCase() : null,
       googleSub: profile.sub,
+      telegramId: null,
       displayName: profile.name ? sanitizeDisplayName(profile.name) : null,
+      createdAt: deps.now().toISOString(),
+    };
+    deps.identity.createUser(user);
+  }
+  return createSessionFor(deps, user);
+}
+
+/**
+ * تکمیل ورودِ تلگرام (مینی‌اپ): یافتن/ساختن کاربر بر پایه‌ی `telegramId`، ساختن نشست.
+ * صحتِ هویت پیش از این با `verifyInitData` تأیید شده است. توکنِ نشست را برمی‌گرداند. (ADR-0027)
+ */
+export function completeTelegramLogin(
+  deps: AuthDeps,
+  tgUser: { id: string; firstName: string | null },
+): string {
+  let user = deps.identity.findUserByTelegramId(tgUser.id);
+  if (!user) {
+    user = {
+      id: deps.newId(),
+      email: null,
+      googleSub: null,
+      telegramId: tgUser.id,
+      displayName: tgUser.firstName ? sanitizeDisplayName(tgUser.firstName) : null,
       createdAt: deps.now().toISOString(),
     };
     deps.identity.createUser(user);

@@ -47,6 +47,11 @@ export function serviceHealth(): HealthItem[] {
       valueKey: c.google ? 'health.on' : 'health.off',
     },
     {
+      labelKey: 'health.telegram',
+      level: c.telegram ? 'ok' : 'info',
+      valueKey: c.telegram ? 'health.on' : 'health.off',
+    },
+    {
       labelKey: 'health.gift',
       level: giftSet ? 'ok' : 'info',
       valueKey: giftSet ? 'health.set' : 'health.unset',

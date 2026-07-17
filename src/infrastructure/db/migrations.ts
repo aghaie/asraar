@@ -154,4 +154,14 @@ export const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    version: 8,
+    name: 'telegram_identity',
+    sql: `
+      -- ورودِ تلگرام (مینی‌اپ، ADR-0027): تلگرام روشِ ورودِ سومِ اختیاری است، کنارِ ایمیل/گوگل.
+      -- SQLite اجازه‌ی ALTER با قیدِ UNIQUE نمی‌دهد؛ پس ستون + ایندکسِ یکتا (NULLها یکتا شمرده نمی‌شوند).
+      ALTER TABLE users ADD COLUMN telegram_id TEXT;
+      CREATE UNIQUE INDEX idx_users_telegram ON users(telegram_id);
+    `,
+  },
 ];

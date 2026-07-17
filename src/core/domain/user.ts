@@ -8,6 +8,8 @@ export interface User {
   id: string;
   email: string | null;
   googleSub: string | null;
+  /** شناسه‌ی عددیِ تلگرام (رشته) در صورت ورود از مینی‌اپ — وگرنه null. (ADR-0027) */
+  telegramId: string | null;
   displayName: string | null;
   createdAt: string;
 }

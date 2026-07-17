@@ -6,6 +6,7 @@ interface UserRow {
   id: string;
   email: string | null;
   google_sub: string | null;
+  telegram_id: string | null;
   display_name: string | null;
   created_at: string;
 }
@@ -26,6 +27,7 @@ export class SqliteIdentityRepository implements IdentityRepository {
       id: row.id,
       email: row.email,
       googleSub: row.google_sub,
+      telegramId: row.telegram_id,
       displayName: row.display_name,
       createdAt: row.created_at,
     };
@@ -43,6 +45,14 @@ export class SqliteIdentityRepository implements IdentityRepository {
     );
   }
 
+  findUserByTelegramId(telegramId: string): User | null {
+    return this.mapUser(
+      this.db.prepare('SELECT * FROM users WHERE telegram_id = ?').get(telegramId) as
+        | UserRow
+        | undefined,
+    );
+  }
+
   findUserById(id: string): User | null {
     return this.mapUser(
       this.db.prepare('SELECT * FROM users WHERE id = ?').get(id) as UserRow | undefined,
@@ -52,10 +62,17 @@ export class SqliteIdentityRepository implements IdentityRepository {
   createUser(user: User): void {
     this.db
       .prepare(
-        `INSERT INTO users (id, email, google_sub, display_name, created_at)
-         VALUES (?, ?, ?, ?, ?)`,
+        `INSERT INTO users (id, email, google_sub, telegram_id, display_name, created_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
       )
-      .run(user.id, user.email, user.googleSub, user.displayName, user.createdAt);
+      .run(
+        user.id,
+        user.email,
+        user.googleSub,
+        user.telegramId,
+        user.displayName,
+        user.createdAt,
+      );
   }
 
   updateDisplayName(userId: string, name: string): void {
