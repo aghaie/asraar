@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useT } from '@/i18n/provider';
+import { CheckIcon } from '../_components/icons';
 
 export function NameEditor({
   initialName,
@@ -65,7 +66,7 @@ export function NameEditor({
           }}
         />
         <button className="btn secondary" type="submit" disabled={busy || !name.trim()}>
-          {t('profile.saveName')}
+          <CheckIcon /> {t('profile.saveName')}
         </button>
       </form>
       {saved && (

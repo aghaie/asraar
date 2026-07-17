@@ -1,5 +1,6 @@
 import { currentLocale } from '@/lib/locale';
 import { t } from '@/i18n/t';
+import { GiftIcon } from '../_components/icons';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,7 +24,7 @@ export default async function GiftPage() {
         {giftUrl ? (
           <div className="actions" style={{ marginTop: '0.6rem' }}>
             <a className="btn" href={giftUrl} target="_blank" rel="noopener noreferrer">
-              {t(locale, 'gift.button')}
+              <GiftIcon /> {t(locale, 'gift.button')}
             </a>
           </div>
         ) : (

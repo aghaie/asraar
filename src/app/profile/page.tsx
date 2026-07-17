@@ -6,6 +6,7 @@ import { currentUserServer } from '@/lib/auth';
 import { currentLocale } from '@/lib/locale';
 import { t } from '@/i18n/t';
 import { formatDate } from '@/lib/format-date';
+import { LogoutIcon } from '../_components/icons';
 
 import { NameEditor } from './name-editor';
 
@@ -70,7 +71,7 @@ export default async function ProfilePage() {
 
       <form action="/api/auth/logout" method="post" style={{ marginTop: '2.5rem' }}>
         <button className="btn quiet" type="submit">
-          {t(locale, 'profile.logout')}
+          <LogoutIcon /> {t(locale, 'profile.logout')}
         </button>
       </form>
     </>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useT } from '@/i18n/provider';
+import { MailIcon } from '../_components/icons';
 
 export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
   const { t } = useT();
@@ -56,7 +57,7 @@ export function LoginForm({ googleEnabled }: { googleEnabled: boolean }) {
           }}
         />
         <button className="btn" type="submit" disabled={busy || !email.trim()}>
-          {t('login.sendLink')}
+          <MailIcon /> {t('login.sendLink')}
         </button>
       </form>
 

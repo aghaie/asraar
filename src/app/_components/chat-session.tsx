@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useT } from '@/i18n/provider';
 import type { MessageKey } from '@/i18n/t';
+import { SendIcon, FlagIcon, GlobeShareIcon, LockIcon, ChatIcon } from './icons';
 
 export interface ChatMessage {
   role: 'seeker' | 'monad';
@@ -238,11 +239,11 @@ export function ChatSession({
           />
           <div className="actions">
             <button className="btn" onClick={() => void send()} disabled={busy || !input.trim()}>
-              {t('chat.send')}
+              <SendIcon /> {t('chat.send')}
             </button>
             {hasOwnTurn && (
               <button className="btn quiet" onClick={() => setPhase('finishing')} disabled={busy}>
-                {t('chat.finish')}
+                <FlagIcon /> {t('chat.finish')}
               </button>
             )}
           </div>
@@ -254,13 +255,13 @@ export function ChatSession({
           <p>{t('finish.prompt')}</p>
           <div className="actions" style={{ marginTop: '0.8rem' }}>
             <button className="btn" onClick={() => void finish(true)} disabled={busy}>
-              {t('finish.publish')}
+              <GlobeShareIcon /> {t('finish.publish')}
             </button>
             <button className="btn secondary" onClick={() => void finish(false)} disabled={busy}>
-              {t('finish.private')}
+              <LockIcon /> {t('finish.private')}
             </button>
             <button className="btn quiet" onClick={() => setPhase('chatting')} disabled={busy}>
-              {t('finish.continue')}
+              <ChatIcon /> {t('finish.continue')}
             </button>
           </div>
         </div>

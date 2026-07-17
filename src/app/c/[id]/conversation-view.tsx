@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useT } from '@/i18n/provider';
 import { RTL_LANGS, labelOf } from './languages';
 import { ownerTokenKey } from '@/lib/branch-token';
+import { TranslateIcon } from '../../_components/icons';
 
 interface ViewMessage {
   role: 'seeker' | 'monad';
@@ -186,7 +187,7 @@ export function ConversationView(props: Props) {
             onClick={() => void changeLanguage(props.preferredLang!)}
             disabled={translating}
           >
-            {t('conv.translate')}
+            <TranslateIcon size={16} /> {t('conv.translate')}
           </button>
         </div>
       )}

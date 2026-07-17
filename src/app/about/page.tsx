@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { currentLocale } from '@/lib/locale';
 import { t } from '@/i18n/t';
+import { GiftIcon } from '../_components/icons';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +19,7 @@ export default async function AboutPage() {
         <p style={{ color: 'var(--text-soft)' }}>{t(locale, 'about.p5')}</p>
         <div className="actions" style={{ marginTop: '0.4rem' }}>
           <Link className="btn secondary" href="/gift">
-            {t(locale, 'nav.gift')}
+            <GiftIcon /> {t(locale, 'nav.gift')}
           </Link>
         </div>
       </div>
