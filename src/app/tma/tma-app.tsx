@@ -35,6 +35,43 @@ type Phase = 'loading' | 'ready' | 'error';
 
 const SDK_URL = 'https://telegram.org/js/telegram-web-app.js';
 
+/** تم‌های نمونه برای پیش‌نمایشِ فقط-توسعه — رنگ‌های کلاسیکِ خودِ تلگرام. */
+const SAMPLE_THEMES: Record<'light' | 'dark', TelegramThemeParams> = {
+  light: {
+    bg_color: '#ffffff',
+    secondary_bg_color: '#f4f4f5',
+    text_color: '#000000',
+    hint_color: '#999999',
+    link_color: '#3390ec',
+    button_color: '#3390ec',
+    button_text_color: '#ffffff',
+  },
+  dark: {
+    bg_color: '#17212b',
+    secondary_bg_color: '#232e3c',
+    text_color: '#f5f5f5',
+    hint_color: '#708499',
+    link_color: '#6ab3f3',
+    button_color: '#5288c1',
+    button_text_color: '#ffffff',
+  },
+};
+
+/** اعمالِ یک تمِ نمونه روی :root (همان کاری که با themeParams واقعی می‌کنیم). */
+function applySampleTheme(scheme: 'light' | 'dark'): void {
+  const p = SAMPLE_THEMES[scheme];
+  const root = document.documentElement;
+  root.style.setProperty('--tg-bg', p.bg_color!);
+  root.style.setProperty('--tg-secondary-bg', p.secondary_bg_color!);
+  root.style.setProperty('--tg-section-bg', p.secondary_bg_color!);
+  root.style.setProperty('--tg-text', p.text_color!);
+  root.style.setProperty('--tg-hint', p.hint_color!);
+  root.style.setProperty('--tg-link', p.link_color!);
+  root.style.setProperty('--tg-button', p.button_color!);
+  root.style.setProperty('--tg-button-text', p.button_text_color!);
+  root.dataset.tgScheme = scheme;
+}
+
 function loadSdk(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (window.Telegram?.WebApp) return resolve();
@@ -73,11 +110,20 @@ function applyTheme(tg: TelegramWebApp): void {
   if (p.bg_color) tg.setBackgroundColor?.(p.bg_color);
 }
 
-export function TmaApp() {
+export function TmaApp({ devPreview = false }: { devPreview?: boolean }) {
   const [phase, setPhase] = useState<Phase>('loading');
   const [message, setMessage] = useState('');
+  const [previewScheme, setPreviewScheme] = useState<'light' | 'dark'>('light');
+
+  // پیش‌نمایشِ فقط-توسعه: بدونِ SDK/احراز؛ گفتگو از جریانِ ناشناسِ عادی کار می‌کند.
+  useEffect(() => {
+    if (!devPreview) return;
+    applySampleTheme(previewScheme);
+    setPhase('ready');
+  }, [devPreview, previewScheme]);
 
   useEffect(() => {
+    if (devPreview) return;
     let cancelled = false;
     (async () => {
       try {
@@ -113,7 +159,7 @@ export function TmaApp() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [devPreview]);
 
   if (phase === 'loading') {
     return <div className="tma-status">در حالِ اتصال به تلگرام…</div>;
@@ -121,5 +167,20 @@ export function TmaApp() {
   if (phase === 'error') {
     return <div className="tma-status tma-error">{message}</div>;
   }
-  return <ChatSession titleKey="new.title" introKey="new.intro" />;
+  return (
+    <>
+      {devPreview && (
+        <div className="tma-preview-bar">
+          <span>پیش‌نمایشِ توسعه — خارج از تلگرام</span>
+          <button
+            type="button"
+            onClick={() => setPreviewScheme((s) => (s === 'light' ? 'dark' : 'light'))}
+          >
+            {previewScheme === 'light' ? '🌙 تمِ تاریک' : '☀️ تمِ روشن'}
+          </button>
+        </div>
+      )}
+      <ChatSession titleKey="new.title" introKey="new.intro" />
+    </>
+  );
 }

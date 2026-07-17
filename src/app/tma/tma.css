@@ -113,6 +113,30 @@ body:has(.tma-root) {
   border-radius: var(--radius);
 }
 
+/* نوارِ پیش‌نمایشِ فقط-توسعه (?preview=1) — در production هرگز رندر نمی‌شود. */
+.tma-preview-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 0.5rem 0.9rem 0;
+  padding: 0.35rem 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+}
+.tma-preview-bar button {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.78rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  cursor: pointer;
+}
+
 /* وضعیت‌های اتصال/خطا. */
 .tma-status {
   text-align: center;

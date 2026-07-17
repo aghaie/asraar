@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function TmaPage() {
-  return <TmaApp />;
+export default async function TmaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ preview?: string }>;
+}) {
+  // پیش‌نمایشِ فقط-توسعه (?preview=1): بدونِ تلگرام، با تمِ نمونه — در production هرگز.
+  const { preview } = await searchParams;
+  const devPreview = process.env.NODE_ENV !== 'production' && preview === '1';
+  return <TmaApp devPreview={devPreview} />;
 }
