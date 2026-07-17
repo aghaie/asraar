@@ -1,6 +1,7 @@
 import { finishConversation } from '@/core/usecases/finish-conversation';
 import { getContainer } from '@/infrastructure/container';
-import { errorResponse, readJsonBody, requireBoolean, requireString } from '@/lib/http';
+import { currentUser } from '@/lib/auth';
+import { errorResponse, optionalString, readJsonBody, requireBoolean } from '@/lib/http';
 
 export async function POST(
   request: Request,
@@ -12,7 +13,8 @@ export async function POST(
     const c = getContainer();
     const result = await finishConversation(c, {
       conversationId: id,
-      ownerToken: requireString(body, 'ownerToken', 256),
+      ownerToken: optionalString(body, 'ownerToken', 256),
+      userId: currentUser(request)?.id ?? null,
       publish: requireBoolean(body, 'publish'),
     });
     return Response.json(result);

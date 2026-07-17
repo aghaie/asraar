@@ -2,7 +2,14 @@ import { LIMITS } from '@/core/domain/conversation';
 import { DomainError } from '@/core/domain/errors';
 import { sendMessage, type SendMessageInput } from '@/core/usecases/send-message';
 import { getContainer } from '@/infrastructure/container';
-import { clientKeyFrom, errorResponse, readJsonBody, requireString } from '@/lib/http';
+import { currentUser } from '@/lib/auth';
+import {
+  clientKeyFrom,
+  errorResponse,
+  optionalString,
+  readJsonBody,
+  requireString,
+} from '@/lib/http';
 
 export async function POST(
   request: Request,
@@ -15,7 +22,8 @@ export async function POST(
     const c = getContainer();
     input = {
       conversationId: id,
-      ownerToken: requireString(body, 'ownerToken', 256),
+      ownerToken: optionalString(body, 'ownerToken', 256),
+      userId: currentUser(request)?.id ?? null,
       content: requireString(body, 'content', LIMITS.maxMessageChars + 1000),
       clientKey: clientKeyFrom(request, c.salt),
     };

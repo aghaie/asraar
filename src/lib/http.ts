@@ -91,6 +91,20 @@ export function requireString(
   return value;
 }
 
+/** مثلِ requireString اما نبود/خالی‌بودن مجاز است (undefined برمی‌گرداند). */
+export function optionalString(
+  body: Record<string, unknown>,
+  field: string,
+  maxLength = 10_000,
+): string | undefined {
+  const value = body[field];
+  if (value === undefined || value === null || value === '') return undefined;
+  if (typeof value !== 'string' || value.length > maxLength) {
+    throw new DomainError('VALIDATION', `فیلد «${field}» نامعتبر است.`);
+  }
+  return value;
+}
+
 export function requireBoolean(body: Record<string, unknown>, field: string): boolean {
   const value = body[field];
   if (typeof value !== 'boolean') {

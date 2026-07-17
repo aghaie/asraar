@@ -13,26 +13,24 @@ export default function ContinuePage({ params }: { params: Promise<{ id: string 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // توکنِ مالکیت اگر در این مرورگر ذخیره شده باشد (جریانِ ناشناس/شاخه)؛
+    // وگرنه بارگذاری با هویتِ نشستِ کاربرِ واردشده انجام می‌شود.
     const ownerToken =
       typeof window !== 'undefined' ? localStorage.getItem(ownerTokenKey(id)) : null;
-    if (!ownerToken) {
-      setError(t('continue.unavailable'));
-      return;
-    }
     (async () => {
       try {
         const res = await fetch(`/api/conversations/${id}/load`, {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ ownerToken }),
+          body: JSON.stringify(ownerToken ? { ownerToken } : {}),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data?.error?.message ?? t('continue.loadError'));
         setInitial({
           id,
-          ownerToken,
+          ownerToken: ownerToken ?? '',
           messages: data.messages,
-          inheritedCount: data.branchPoint ?? data.messages.length,
+          inheritedCount: data.branchPoint ?? 0,
         });
       } catch (e) {
         setError(e instanceof Error ? e.message : t('continue.loadError'));

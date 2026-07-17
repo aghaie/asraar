@@ -73,6 +73,20 @@ export function turnCount(c: Pick<Conversation, 'messages'>): number {
   return c.messages.filter((m) => m.role === 'seeker').length;
 }
 
+/**
+ * آیا این درخواست حقِ ادامه/پایانِ گفتگو را دارد؟
+ * دو راهِ مالکیت: توکنِ مالکیت (جریانِ ناشناس)، یا هویتِ کاربرِ واردشده‌ای که گفتگو به او وصل است.
+ * این‌گونه گفتگوی نیمه‌تمامِ کاربرِ واردشده حتی بدونِ ownerToken هم قابلِ بازیابی است (ADR-0019).
+ */
+export function canManage(
+  c: Pick<Conversation, 'ownerToken' | 'userId'>,
+  auth: { ownerToken?: string | null; userId?: string | null },
+): boolean {
+  if (auth.ownerToken && c.ownerToken === auth.ownerToken) return true;
+  if (auth.userId && c.userId === auth.userId) return true;
+  return false;
+}
+
 /** عنوان گفتگو از نخستین پرسش ساخته می‌شود؛ قهرمان سایت حقیقت است، نه کاربر. */
 export function deriveTitle(firstQuestion: string): string {
   const oneLine = firstQuestion.replace(/\s+/g, ' ').trim();

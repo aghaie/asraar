@@ -55,13 +55,27 @@ export default async function ProfilePage() {
                 <span>{t(locale, 'card.turns', { turns: c.turns })}</span>
                 <span>{formatDate(locale, c.publishedAt ?? c.createdAt)}</span>
               </div>
+              {c.status === 'active' && (
+                <div className="card-cta">{t(locale, 'profile.resume')}</div>
+              )}
             </>
           );
-          return c.status === 'published' ? (
-            <Link key={c.id} href={`/c/${c.id}`} className="card">
-              {inner}
-            </Link>
-          ) : (
+          if (c.status === 'published') {
+            return (
+              <Link key={c.id} href={`/c/${c.id}`} className="card">
+                {inner}
+              </Link>
+            );
+          }
+          if (c.status === 'active') {
+            // گفتگوی نیمه‌تمام: بازگشت برای ادامه یا تعیینِ تکلیف (انتشار/خصوصی).
+            return (
+              <Link key={c.id} href={`/continue/${c.id}`} className="card">
+                {inner}
+              </Link>
+            );
+          }
+          return (
             <div key={c.id} className="card" style={{ cursor: 'default' }}>
               {inner}
             </div>

@@ -210,6 +210,13 @@ a:hover {
   gap: 0.4rem 1.2rem;
   flex-wrap: wrap;
 }
+/* فراخوانِ آرامِ «ادامه بده» روی کارتِ گفتگوی نیمه‌تمام */
+.card-cta {
+  margin-top: 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent);
+}
 
 /* پیام‌ها */
 .messages {

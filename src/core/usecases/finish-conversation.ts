@@ -1,4 +1,4 @@
-import { deriveTitle, type Message } from '../domain/conversation';
+import { canManage, deriveTitle, type Message } from '../domain/conversation';
 import { DomainError, forbidden, notFound } from '../domain/errors';
 import { normalizeForPublication, normalizePersian } from '../domain/normalize';
 import type { ContentModerator } from '../ports/content-moderator';
@@ -12,7 +12,10 @@ export interface FinishConversationDeps {
 
 export interface FinishConversationInput {
   conversationId: string;
-  ownerToken: string;
+  /** توکنِ مالکیت (جریانِ ناشناس)؛ اگر کاربر واردشده و مالک باشد می‌تواند خالی باشد. */
+  ownerToken?: string | null;
+  /** شناسه‌ی کاربرِ واردشده (راهِ دومِ مالکیت). */
+  userId?: string | null;
   /** true: انتشار برای همه‌ی جهان — false: خصوصی می‌ماند */
   publish: boolean;
 }
@@ -29,7 +32,9 @@ export async function finishConversation(
 ): Promise<{ status: 'published' | 'private' }> {
   const conversation = deps.repo.findById(input.conversationId);
   if (!conversation) throw notFound('گفتگو');
-  if (conversation.ownerToken !== input.ownerToken) throw forbidden();
+  if (!canManage(conversation, { ownerToken: input.ownerToken, userId: input.userId })) {
+    throw forbidden();
+  }
   if (conversation.status !== 'active') {
     throw new DomainError('CONVERSATION_CLOSED', 'این گفتگو قبلاً پایان یافته است.');
   }

@@ -1,10 +1,12 @@
+import { canManage } from '@/core/domain/conversation';
 import { forbidden, notFound } from '@/core/domain/errors';
 import { getContainer } from '@/infrastructure/container';
-import { errorResponse, readJsonBody, requireString } from '@/lib/http';
+import { currentUser } from '@/lib/auth';
+import { errorResponse, optionalString, readJsonBody } from '@/lib/http';
 
 /**
- * بارگذاری یک گفتگوی فعالِ متعلق به مالک (برای ادامه‌ی شاخه در سمت کاربر).
- * بدنه: { "ownerToken": "…" }
+ * بارگذاری یک گفتگوی متعلق به مالک برای ادامه/تعیینِ تکلیف.
+ * مالکیت با ownerToken (جریانِ ناشناس) یا هویتِ کاربرِ واردشده. بدنه: { "ownerToken"?: "…" }
  */
 export async function POST(
   request: Request,
@@ -13,12 +15,13 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await readJsonBody(request);
-    const ownerToken = requireString(body, 'ownerToken', 256);
+    const ownerToken = optionalString(body, 'ownerToken', 256);
+    const userId = currentUser(request)?.id ?? null;
 
     const { repo } = getContainer();
     const conversation = repo.findById(id);
     if (!conversation) throw notFound('گفتگو');
-    if (conversation.ownerToken !== ownerToken) throw forbidden();
+    if (!canManage(conversation, { ownerToken, userId })) throw forbidden();
 
     return Response.json({
       messages: conversation.messages.map((m) => ({ role: m.role, content: m.content })),
