@@ -140,10 +140,32 @@ a:hover {
 .site-footer {
   border-top: 1px solid var(--border);
   margin-top: 3rem;
-  padding: 1.5rem 1.25rem;
-  text-align: center;
+  padding: 1.4rem 1.25rem;
   color: var(--text-soft);
   font-size: 0.82rem;
+}
+.footer-inner {
+  max-width: var(--measure);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+/* کپی‌رایت سمت راست (start در RTL) */
+.footer-copy {
+  text-align: start;
+  line-height: 1.7;
+}
+.footer-links {
+  margin-top: 0.15rem;
+}
+.footer-links a {
+  color: var(--text-soft);
+}
+.footer-links a:hover {
+  color: var(--text);
 }
 .container {
   max-width: var(--measure);
@@ -580,88 +602,69 @@ select {
   line-height: 2;
   text-wrap: pretty;
 }
-.layers {
-  margin-top: 1rem;
-  border-top: 1px solid var(--border);
-}
-.layer {
-  border-bottom: 1px solid var(--border);
-}
-.layer summary {
-  list-style: none;
+/* نوارِ کنشِ درونِ باکسِ پاسخِ مناد — سه آیکن، پایین-چپ (اصل ۴ + شاخهٔ خنثی) */
+.msg-actions {
   display: flex;
+  gap: 0.3rem;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+.msg-act {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 44px;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-soft);
   cursor: pointer;
-  font-size: 0.88rem;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.msg-act:hover {
   color: var(--accent);
+  background: var(--bg);
+  border-color: var(--border);
 }
-.layer summary::-webkit-details-marker {
-  display: none;
+.msg-act.active {
+  color: var(--accent);
+  background: var(--bg);
+  border-color: var(--accent);
 }
-.layer summary::before {
-  content: '▸';
-  font-size: 0.68rem;
-  transition: transform 0.2s;
-}
-.layer[open] summary::before {
-  transform: rotate(90deg);
-}
-.layer summary:hover {
-  color: var(--text);
-}
-.layer summary:focus-visible {
+.msg-act:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
 }
-.layer .body {
+.msg-act:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* پنلِ لایه‌ی گشوده (استدلال/مبنای قرآنی) */
+.layer-panel {
+  margin-top: 0.7rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.7rem;
+  animation: layer-in 0.25s ease;
+}
+.layer-head {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 0.3rem;
+}
+.layer-body {
   font-size: 0.9rem;
   color: var(--text-soft);
   line-height: 2;
-  padding: 0 1.15rem 1rem;
   text-wrap: pretty;
-}
-.layer[open] .body {
-  animation: layer-in 0.25s ease;
 }
 @keyframes layer-in {
   from {
     opacity: 0;
     transform: translateY(-3px);
   }
-}
-
-/* شاخهٔ خنثی — «این مسیر را ادامه بده» */
-.branch-row {
-  display: flex;
-  margin: 0.2rem 0 1.4rem;
-}
-.branch-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 44px;
-  background: transparent;
-  border: 1px dashed var(--border);
-  border-radius: 999px;
-  color: var(--text-soft);
-  font: inherit;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  padding: 0.35rem 1rem;
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
-}
-.branch-btn:hover {
-  border-color: var(--accent);
-  border-style: solid;
-  color: var(--accent);
-}
-.branch-btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
 }
 .branches {
   border-top: 1px solid var(--border);
@@ -715,22 +718,26 @@ select {
 .lang-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  min-height: 44px;
+  gap: 0.45rem;
+  min-height: 40px;
   min-width: 44px;
-  background: transparent;
-  border: 1px solid transparent;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 999px;
   color: var(--text-soft);
   font: inherit;
   font-size: 0.85rem;
-  padding: 0.25rem 0.8rem;
+  padding: 0.3rem 0.85rem;
   cursor: pointer;
-  transition: border-color 0.15s, color 0.15s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s, box-shadow 0.15s;
 }
 .lang-btn:hover {
-  border-color: var(--border);
+  border-color: var(--accent);
   color: var(--text);
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.05);
+}
+.lang-btn svg {
+  color: var(--accent);
 }
 .lang-btn:focus-visible {
   outline: 2px solid var(--accent);
@@ -750,6 +757,14 @@ select {
   padding: 0.3rem;
   box-shadow: 0 6px 24px rgb(0 0 0 / 0.08);
   z-index: 10;
+}
+/* در فوتر منو رو به بالا باز می‌شود؛ لبه‌ی پایانی هم‌تراز با دکمه تا از کادر بیرون نزند */
+.lang-switch.up .lang-menu {
+  top: auto;
+  bottom: calc(100% + 0.4rem);
+  inset-inline-end: 0;
+  inset-inline-start: auto;
+  box-shadow: 0 -6px 24px rgb(0 0 0 / 0.08);
 }
 .lang-menu a,
 .lang-menu button {
@@ -783,4 +798,149 @@ select {
 .lang-menu button.active::after {
   content: '✓';
   font-size: 0.78rem;
+}
+
+/* ── پنل مدیریت (ADR-0026) ── */
+.nav-admin {
+  color: var(--accent);
+  font-weight: 700;
+}
+.admin-head {
+  margin-bottom: 1.6rem;
+}
+.admin-sub {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  text-wrap: pretty;
+  margin-bottom: 0.9rem;
+}
+.admin-nav {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.7rem;
+}
+.admin-nav a {
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+}
+.admin-nav a:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+  text-decoration: none;
+}
+.admin-h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.3rem;
+}
+
+/* داشبورد */
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.8rem;
+}
+.admin-stat {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 1.1rem 1.15rem;
+}
+.admin-stat .num {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.1;
+}
+.admin-stat .label {
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-soft);
+}
+
+/* جدولِ نظارت */
+.admin-table-wrap {
+  overflow-x: auto;
+  margin-top: 1.1rem;
+}
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.admin-table th,
+.admin-table td {
+  text-align: start;
+  padding: 0.65rem 0.7rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.admin-table th {
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.admin-table tr[aria-busy='true'] {
+  opacity: 0.5;
+}
+.admin-table .title-cell {
+  max-width: 22rem;
+  font-weight: 600;
+}
+.admin-table .date-cell {
+  white-space: nowrap;
+  color: var(--text-soft);
+}
+.admin-table .tag {
+  margin-inline-start: 0.5rem;
+  font-size: 0.68rem;
+  color: var(--accent);
+  border: 1px solid var(--accent-soft);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+}
+.status-pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  border-radius: 999px;
+  padding: 0.12rem 0.6rem;
+  border: 1px solid var(--border);
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+.status-pill.published {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.row-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.rowbtn {
+  border: 1px solid var(--border);
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font: inherit;
+  font-size: 0.78rem;
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.rowbtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.rowbtn.danger:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+.rowbtn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }

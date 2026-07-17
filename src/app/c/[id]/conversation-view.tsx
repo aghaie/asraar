@@ -6,7 +6,12 @@ import Link from 'next/link';
 import { useT } from '@/i18n/provider';
 import { RTL_LANGS, labelOf } from './languages';
 import { ownerTokenKey } from '@/lib/branch-token';
-import { TranslateIcon } from '../../_components/icons';
+import {
+  TranslateIcon,
+  ReasoningIcon,
+  QuranIcon,
+  BranchIcon,
+} from '../../_components/icons';
 
 interface ViewMessage {
   role: 'seeker' | 'monad';
@@ -65,7 +70,23 @@ export function ConversationView(props: Props) {
   const [branching, setBranching] = useState(false);
   const [layers, setLayers] = useState<Record<string, string>>({});
   const [layerState, setLayerState] = useState<Record<string, 'loading' | 'error'>>({});
+  const [openLayers, setOpenLayers] = useState<Set<string>>(new Set());
   const router = useRouter();
+
+  /** باز/بستنِ یک لایه (استدلال/مبنای قرآنی) با کلیکِ آیکنِ داخلِ باکس. */
+  function toggleLayer(seq: number, layer: 'reasoning' | 'quranic') {
+    const key = `${seq}:${layer}`;
+    setOpenLayers((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+        void loadLayer(seq, layer);
+      }
+      return next;
+    });
+  }
 
   /** بارگذاری تنبلِ یک لایه‌ی پاسخ (استدلال/مبنای قرآنی) هنگام باز شدن. */
   async function loadLayer(seq: number, layer: 'reasoning' | 'quranic') {
@@ -220,46 +241,68 @@ export function ConversationView(props: Props) {
                 </details>
               )}
               {m.role === 'monad' && (
-                <div className="layers">
-                  {(
-                    [
-                      { layer: 'reasoning' as const, key: 'layer.reasoning' as const },
-                      { layer: 'quranic' as const, key: 'layer.quranic' as const },
-                    ]
-                  ).map(({ layer, key: labelKey }) => {
+                <>
+                  <div className="msg-actions">
+                    {(
+                      [
+                        {
+                          layer: 'reasoning' as const,
+                          key: 'layer.reasoning' as const,
+                          Icon: ReasoningIcon,
+                        },
+                        {
+                          layer: 'quranic' as const,
+                          key: 'layer.quranic' as const,
+                          Icon: QuranIcon,
+                        },
+                      ]
+                    ).map(({ layer, key: labelKey, Icon }) => {
+                      const key = `${i + 1}:${layer}`;
+                      return (
+                        <button
+                          key={layer}
+                          type="button"
+                          className={openLayers.has(key) ? 'msg-act active' : 'msg-act'}
+                          aria-pressed={openLayers.has(key)}
+                          aria-label={t(labelKey)}
+                          title={t(labelKey)}
+                          onClick={() => toggleLayer(i + 1, layer)}
+                        >
+                          <Icon size={17} />
+                        </button>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      className="msg-act"
+                      aria-label={t('branch.continue')}
+                      title={t('branch.continue')}
+                      onClick={() => void branchFrom(i + 1)}
+                      disabled={branching}
+                    >
+                      <BranchIcon size={17} />
+                    </button>
+                  </div>
+                  {(['reasoning', 'quranic'] as const).map((layer) => {
                     const key = `${i + 1}:${layer}`;
+                    if (!openLayers.has(key)) return null;
+                    const labelKey =
+                      layer === 'reasoning' ? 'layer.reasoning' : 'layer.quranic';
                     return (
-                      <details
-                        key={layer}
-                        className="layer"
-                        onToggle={(e) => {
-                          if (e.currentTarget.open) void loadLayer(i + 1, layer);
-                        }}
-                      >
-                        <summary>{t(labelKey)}</summary>
-                        <div className="body">
+                      <div key={layer} className="layer-panel">
+                        <div className="layer-head">{t(labelKey)}</div>
+                        <div className="layer-body">
                           {layers[key] ??
                             (layerState[key] === 'error'
                               ? t('layer.error')
                               : t('layer.loading'))}
                         </div>
-                      </details>
+                      </div>
                     );
                   })}
-                </div>
+                </>
               )}
             </div>
-            {m.role === 'monad' && (
-              <div className="branch-row">
-                <button
-                  className="branch-btn"
-                  onClick={() => void branchFrom(i + 1)}
-                  disabled={branching}
-                >
-                  <span className="arrow">↳</span> {t('branch.continue')}
-                </button>
-              </div>
-            )}
           </div>
         ))}
       </div>

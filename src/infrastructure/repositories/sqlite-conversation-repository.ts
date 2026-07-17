@@ -15,6 +15,7 @@ import {
 } from '@/core/domain/epistemic-signal';
 import type { ConversationRepository } from '@/core/ports/conversation-repository';
 import type { OwnedConversationSummary } from '@/core/domain/user';
+import type { AdminConversationRow, AdminStats } from '@/core/domain/admin';
 
 interface ConversationRow {
   id: string;
@@ -295,5 +296,97 @@ export class SqliteConversationRepository implements ConversationRepository {
       )
       .run(conversationId, kind, actorKey, at);
     return Number(result.changes) === 0 ? 'duplicate' : 'recorded';
+  }
+
+  // — نمای مدیریت (ADR-0026) —
+
+  adminStats(): AdminStats {
+    const byStatus = this.db
+      .prepare(`SELECT status, COUNT(*) AS c FROM conversations GROUP BY status`)
+      .all() as { status: ConversationStatus; c: number }[];
+    const counts = { total: 0, published: 0, active: 0, private: 0 };
+    for (const r of byStatus) {
+      const n = Number(r.c);
+      counts.total += n;
+      if (r.status === 'published') counts.published = n;
+      else if (r.status === 'active') counts.active = n;
+      else if (r.status === 'private') counts.private = n;
+    }
+    const scalar = (sql: string, ...args: unknown[]): number => {
+      const row = this.db.prepare(sql).get(...(args as [])) as { c: number } | undefined;
+      return row ? Number(row.c) : 0;
+    };
+    const users = scalar(`SELECT COUNT(*) AS c FROM users`);
+    const signals = scalar(`SELECT COUNT(*) AS c FROM epistemic_signals`);
+    const branches = scalar(
+      `SELECT COUNT(*) AS c FROM conversations WHERE parent_id IS NOT NULL`,
+    );
+    const publishedLast7Days = scalar(
+      `SELECT COUNT(*) AS c FROM conversations
+       WHERE status = 'published' AND published_at >= datetime('now', '-7 days')`,
+    );
+    return { conversations: counts, users, signals, branches, publishedLast7Days };
+  }
+
+  listAllForAdmin(limit: number): AdminConversationRow[] {
+    const rows = this.db
+      .prepare(
+        `SELECT c.id, c.title, c.status, c.user_id, c.parent_id,
+                c.created_at, c.published_at,
+                (SELECT COUNT(*) FROM messages m
+                  WHERE m.conversation_id = c.id AND m.role = 'seeker') AS turns
+         FROM conversations c
+         ORDER BY c.created_at DESC
+         LIMIT ?`,
+      )
+      .all(limit) as unknown as (ConversationRow & { turns: number })[];
+    return rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      status: r.status,
+      turns: Number(r.turns),
+      userId: r.user_id,
+      parentId: r.parent_id,
+      createdAt: r.created_at,
+      publishedAt: r.published_at,
+    }));
+  }
+
+  setStatus(id: string, status: ConversationStatus): void {
+    this.db.exec('BEGIN');
+    try {
+      this.db
+        .prepare('UPDATE conversations SET status = ? WHERE id = ?')
+        .run(status, id);
+      // اگر از انتشار خارج شد، از نمایه‌ی جست‌وجو هم برداشته شود.
+      if (status !== 'published') {
+        this.db.prepare('DELETE FROM search_index WHERE conversation_id = ?').run(id);
+      }
+      this.db.exec('COMMIT');
+    } catch (e) {
+      this.db.exec('ROLLBACK');
+      throw e;
+    }
+  }
+
+  deleteConversation(id: string): void {
+    this.db.exec('BEGIN');
+    try {
+      // جدول‌های بدونِ FKِ آبشاری را دستی پاک می‌کنیم؛ بقیه با ON DELETE CASCADE.
+      this.db.prepare('DELETE FROM search_index WHERE conversation_id = ?').run(id);
+      this.db
+        .prepare(`DELETE FROM epistemic_signals WHERE content_type = 'conversation' AND content_id = ?`)
+        .run(id);
+      this.db.prepare('DELETE FROM answer_layers WHERE conversation_id = ?').run(id);
+      // شاخه‌های فرزند را یتیم نکن: پیوندِ والد را قطع کن.
+      this.db
+        .prepare('UPDATE conversations SET parent_id = NULL, branch_point = NULL WHERE parent_id = ?')
+        .run(id);
+      this.db.prepare('DELETE FROM conversations WHERE id = ?').run(id);
+      this.db.exec('COMMIT');
+    } catch (e) {
+      this.db.exec('ROLLBACK');
+      throw e;
+    }
   }
 }

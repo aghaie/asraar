@@ -78,3 +78,27 @@ export const TranslateIcon = ({ size }: P) => (
     <path d="M4 5h7M8 3v2c0 4-2 7-5 8M5 9c0 3 3 5 6 6M13 21l4-9 4 9M15.5 17h5" />
   </svg>
 );
+
+/** استدلال — «چگونه به این رسیدیم»: پرتوِ اندیشه. */
+export const ReasoningIcon = ({ size }: P) => (
+  <svg {...base(size)}>
+    <path d="M9 18h6M10 21h4M12 3a6 6 0 0 1 4 10.5c-.7.6-1 1.2-1 2.5H9c0-1.3-.3-1.9-1-2.5A6 6 0 0 1 12 3Z" />
+  </svg>
+);
+
+/** مبنای قرآنی — کتابِ گشوده. */
+export const QuranIcon = ({ size }: P) => (
+  <svg {...base(size)}>
+    <path d="M12 6C10.5 5 8 4.5 5 4.7 4.4 4.8 4 5.3 4 6v11c0 .6.5 1 1.1 1 2.7-.2 5 .3 6.9 1.3M12 6c1.5-1 4-1.5 7-1.3.6.1 1 .6 1 1.3v11c0 .6-.5 1-1.1 1-2.7-.2-5 .3-6.9 1.3M12 6v13" />
+  </svg>
+);
+
+/** ادامه‌ی مسیر — انشعابِ خنثی. */
+export const BranchIcon = ({ size }: P) => (
+  <svg {...base(size)}>
+    <circle cx="6" cy="6" r="2.2" />
+    <circle cx="6" cy="18" r="2.2" />
+    <circle cx="18" cy="9" r="2.2" />
+    <path d="M6 8.2v7.6M8.2 6H13a3 3 0 0 1 3 3v-.2" />
+  </svg>
+);

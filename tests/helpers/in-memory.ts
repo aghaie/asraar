@@ -6,6 +6,7 @@ import {
   type PublishedSummary,
 } from '@/core/domain/conversation';
 import type { ConversationRepository } from '@/core/ports/conversation-repository';
+import type { AdminConversationRow, AdminStats } from '@/core/domain/admin';
 import type { RateAction, RateLimiter } from '@/core/ports/rate-limiter';
 import type { EngineTurn, LlmEngine } from '@/core/ports/llm-engine';
 import type {
@@ -152,6 +153,51 @@ export class InMemoryConversationRepository implements ConversationRepository {
     if (!c || c.ownerToken !== ownerToken || c.userId !== null) return false;
     c.userId = userId;
     return true;
+  }
+
+  adminStats(): AdminStats {
+    const all = [...this.store.values()];
+    const by = (s: Conversation['status']) => all.filter((c) => c.status === s).length;
+    return {
+      conversations: {
+        total: all.length,
+        published: by('published'),
+        active: by('active'),
+        private: by('private'),
+      },
+      users: new Set(all.map((c) => c.userId).filter(Boolean)).size,
+      signals: this.signalRows.size,
+      branches: all.filter((c) => c.parentId != null).length,
+      publishedLast7Days: all.filter((c) => c.status === 'published').length,
+    };
+  }
+
+  listAllForAdmin(limit: number): AdminConversationRow[] {
+    return [...this.store.values()]
+      .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+      .slice(0, limit)
+      .map((c) => ({
+        id: c.id,
+        title: c.title,
+        status: c.status,
+        turns: c.messages.filter((m) => m.role === 'seeker').length,
+        userId: c.userId,
+        parentId: c.parentId,
+        createdAt: c.createdAt,
+        publishedAt: c.publishedAt,
+      }));
+  }
+
+  setStatus(id: string, status: Conversation['status']): void {
+    const c = this.store.get(id);
+    if (c) c.status = status;
+  }
+
+  deleteConversation(id: string): void {
+    this.store.delete(id);
+    for (const [key, row] of this.signalRows) {
+      if (row.id === id) this.signalRows.delete(key);
+    }
   }
 }
 

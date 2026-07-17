@@ -7,6 +7,7 @@ import type {
 } from '../domain/conversation';
 import type { EpistemicSignalKind, SignalCounts } from '../domain/epistemic-signal';
 import type { OwnedConversationSummary } from '../domain/user';
+import type { AdminConversationRow, AdminStats } from '../domain/admin';
 
 /** پورت مخزن گفتگوها — پیاده‌سازی فعلی SQLite است و بعداً بدون تغییر Core عوض می‌شود. */
 export interface ConversationRepository {
@@ -52,4 +53,14 @@ export interface ConversationRepository {
    * فقط اگر گفتگو هنوز به کاربری وصل نباشد. true اگر انجام شد.
    */
   claimConversation(conversationId: string, ownerToken: string, userId: string): boolean;
+
+  // — نمای مدیریت (ADR-0026) —
+  /** شمارگانِ کلیِ سرویس برای داشبوردِ مدیریت. */
+  adminStats(): AdminStats;
+  /** همه‌ی گفتگوها (هر وضعیتی)، جدیدترین اول — برای نظارتِ محتوا. */
+  listAllForAdmin(limit: number): AdminConversationRow[];
+  /** تغییرِ وضعیتِ یک گفتگو (مثلاً خارج‌کردن از انتشار: published→private). */
+  setStatus(id: string, status: ConversationStatus): void;
+  /** حذفِ کاملِ یک گفتگو و همه‌ی داده‌های وابسته (نظارتِ کرامت). */
+  deleteConversation(id: string): void;
 }
