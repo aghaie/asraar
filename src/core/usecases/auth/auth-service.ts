@@ -64,6 +64,26 @@ function createSessionFor(deps: AuthDeps, user: User): string {
   return token;
 }
 
+/**
+ * ورودِ توسعه‌ای بدونِ لینکِ ایمیل: مستقیم برای یک ایمیل نشست می‌سازد.
+ * فقط باید از مسیرِ فقط-توسعه صدا زده شود؛ هرگز در production. توکن نشست را برمی‌گرداند.
+ */
+export function devLoginAs(deps: AuthDeps, rawEmail: string): string {
+  const email = rawEmail.trim().toLowerCase();
+  let user = deps.identity.findUserByEmail(email);
+  if (!user) {
+    user = {
+      id: deps.newId(),
+      email,
+      googleSub: null,
+      displayName: null,
+      createdAt: deps.now().toISOString(),
+    };
+    deps.identity.createUser(user);
+  }
+  return createSessionFor(deps, user);
+}
+
 /** تکمیل ورود ایمیلی: مصرف توکن، یافتن/ساختن کاربر، ساختن نشست. توکن نشست را برمی‌گرداند. */
 export function completeEmailLogin(deps: AuthDeps, token: string): string {
   const email = deps.identity.consumeLoginToken(deps.hash(token), deps.now().toISOString());
