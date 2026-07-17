@@ -19,6 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <nav className="admin-nav">
           <Link href="/admin">{t(locale, 'admin.nav.overview')}</Link>
           <Link href="/admin/conversations">{t(locale, 'admin.nav.conversations')}</Link>
+          <Link href="/admin/health">{t(locale, 'admin.nav.health')}</Link>
         </nav>
       </div>
       {children}

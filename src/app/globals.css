@@ -944,3 +944,53 @@ select {
   opacity: 0.5;
   cursor: default;
 }
+
+/* سلامتِ پیکربندی (ADR-0026) */
+.health-list {
+  list-style: none;
+  margin-top: 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.health-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.health-row:last-child {
+  border-bottom: none;
+}
+.health-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--text-soft);
+}
+.health-dot.ok {
+  background: var(--accent);
+}
+.health-dot.warn {
+  background: var(--danger);
+}
+.health-dot.info {
+  background: var(--text-soft);
+}
+.health-label {
+  flex: 1;
+  font-size: 0.92rem;
+}
+.health-val {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  font-weight: 600;
+}
+.health-val.ok {
+  color: var(--accent);
+}
+.health-val.warn {
+  color: var(--danger);
+}
