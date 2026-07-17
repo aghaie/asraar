@@ -60,6 +60,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </Link>
               <nav className="nav">
                 <Link href="/new">{t(locale, 'nav.new')}</Link>
+                <Link href="/about">{t(locale, 'nav.about')}</Link>
                 <Link href="/gift">{t(locale, 'nav.gift')}</Link>
                 {user ? (
                   <Link href="/profile">{user.displayName ?? t(locale, 'nav.profile')}</Link>

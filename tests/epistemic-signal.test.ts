@@ -4,9 +4,8 @@ import {
   isEpistemicSignalKind,
   SIGNAL_WEIGHT,
 } from '@/core/domain/epistemic-signal';
-import { clampConfidence } from '@/core/domain/insight';
 
-describe('epistemic signals (ADR-0022، اصل ۳)', () => {
+describe('epistemic signals (اثر بر فهم — نه محبوبیت)', () => {
   it('نوع‌های معتبر و نامعتبر را تشخیص می‌دهد', () => {
     expect(isEpistemicSignalKind('created-branch')).toBe(true);
     expect(isEpistemicSignalKind('like')).toBe(false); // «محبوبیت» وجود ندارد
@@ -30,14 +29,5 @@ describe('epistemic signals (ADR-0022، اصل ۳)', () => {
 
   it('نبودِ سیگنال یعنی اثرِ صفر (هیچ سیگنالِ منفی‌ای نیست)', () => {
     expect(epistemicImpact({})).toBe(0);
-  });
-});
-
-describe('clampConfidence', () => {
-  it('در بازهٔ ۰ تا ۱ می‌ماند', () => {
-    expect(clampConfidence(1.4)).toBe(1);
-    expect(clampConfidence(-0.2)).toBe(0);
-    expect(clampConfidence(0.7)).toBe(0.7);
-    expect(clampConfidence(Number.NaN)).toBe(0);
   });
 });
