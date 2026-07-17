@@ -8,6 +8,8 @@ const securityHeaders = [
 
 const nextConfig = {
   output: 'standalone',
+  // برای راستی‌آزماییِ بیلد بدونِ آسیب به .next سرورِ dev: NEXT_DIST_DIR=.next-verify
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];
   },
